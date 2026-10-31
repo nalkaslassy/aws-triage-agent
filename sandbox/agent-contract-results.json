@@ -1,0 +1,82 @@
+{
+  "evaluation_type": "scripted replay contracts; no model inference or live AWS calls",
+  "model_vs_rules_quality": "not measured",
+  "passed": true,
+  "cases": [
+    {
+      "case": "contradictory_simulation",
+      "passed": true,
+      "initial_rule_findings": 1,
+      "followup_checks": [
+        "permissions"
+      ],
+      "accepted_candidates": [
+        "authorization"
+      ],
+      "stop_reason": "finished",
+      "additional_evidence_items": 1
+    },
+    {
+      "case": "missing_policy_access",
+      "passed": true,
+      "initial_rule_findings": 1,
+      "followup_checks": [
+        "permissions"
+      ],
+      "accepted_candidates": [],
+      "stop_reason": "finished",
+      "additional_evidence_items": 1
+    },
+    {
+      "case": "noise_only",
+      "passed": true,
+      "initial_rule_findings": 0,
+      "followup_checks": [],
+      "accepted_candidates": [],
+      "stop_reason": "finished",
+      "additional_evidence_items": 0
+    },
+    {
+      "case": "permission_denied",
+      "passed": true,
+      "initial_rule_findings": 1,
+      "followup_checks": [
+        "permissions"
+      ],
+      "accepted_candidates": [
+        "authorization"
+      ],
+      "stop_reason": "finished",
+      "additional_evidence_items": 2
+    },
+    {
+      "case": "stale_error_claim",
+      "passed": true,
+      "initial_rule_findings": 1,
+      "followup_checks": [],
+      "accepted_candidates": [],
+      "stop_reason": "invalid_decision",
+      "additional_evidence_items": 0
+    },
+    {
+      "case": "unsafe_tool_proposal",
+      "passed": true,
+      "initial_rule_findings": 1,
+      "followup_checks": [],
+      "accepted_candidates": [],
+      "stop_reason": "invalid_decision",
+      "additional_evidence_items": 0
+    },
+    {
+      "case": "unsupported_change_claim",
+      "passed": true,
+      "initial_rule_findings": 0,
+      "followup_checks": [
+        "changes"
+      ],
+      "accepted_candidates": [],
+      "stop_reason": "invalid_decision",
+      "additional_evidence_items": 1
+    }
+  ]
+}

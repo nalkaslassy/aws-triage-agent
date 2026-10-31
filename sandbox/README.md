@@ -1,6 +1,6 @@
 # Disposable Orders API sandbox
 
-This lab is prepared for live testing, but has not been deployed or validated in an AWS account. The investigator is still deterministic; no LLM or Datadog connection is configured.
+This lab is prepared for live testing, but has not been deployed or validated in an AWS account. Deterministic analysis is the default; the optional [Bedrock investigation loop](../docs/AGENT.md) is available but has not been exercised with live inference. The lab configures no model or Datadog connection.
 
 ## What it deploys
 

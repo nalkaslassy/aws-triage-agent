@@ -72,6 +72,25 @@ class Evidence:
             for key in ("Role", "FunctionArn", "LastModified", "RevisionId", "CodeSha256", "State", "LastUpdateStatus"):
                 if self.data.get(key) is not None:
                     text_field(self.data[key], key)
+        if self.kind == "permission_simulation":
+            if self.data.get("decision") is not None and self.data["decision"] not in {"allowed", "explicitDeny", "implicitDeny"}:
+                raise ValueError("Invalid simulation decision")
+            for key in ("role", "action", "target"):
+                if self.data.get(key) is not None:
+                    text_field(self.data[key], key)
+            context = self.data.get("missing_context", [])
+            if not isinstance(context, list) or len(context) > 20 or any(not isinstance(k, str) or len(k) > 256 for k in context):
+                raise ValueError("Invalid simulation context")
+        if self.kind == "change_history":
+            events = self.data.get("events", [])
+            if not isinstance(events, list) or len(events) > 10:
+                raise ValueError("Invalid change history")
+            for event in events:
+                if not isinstance(event, dict) or set(event) != {"EventId", "EventName", "EventSource", "EventTime"}:
+                    raise ValueError("Invalid change event")
+                for key, value in event.items():
+                    text_field(value, key, 256)
+                utc_time(event["EventTime"])
         if self.kind == "log_signals":
             for key in ("access_denied", "timeout", "exception", "resource_missing", "unverified_mentions"):
                 number(self.data.get(key), key, integer=True)
@@ -143,6 +162,7 @@ class Report:
     findings: list[Finding] = field(default_factory=list)
     gaps: list[str] = field(default_factory=list)
     evidence: list[dict[str, Any]] = field(default_factory=list)
+    mode: str = "first-pass"
 
     def to_dict(self):
         return asdict(self)

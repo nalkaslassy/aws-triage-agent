@@ -31,6 +31,8 @@ Acceptance: distinguish VPN authentication, destination authorization, DNS, tran
 
 ## 0.4 — Datadog and model-driven investigation
 
+The bounded model/runtime portion is now implemented ahead of Datadog: explicit Bedrock opt-in, four read-only named follow-ups, runtime scope/candidate/citation validation, cached checks, budgets, and seven scripted replay cases. Current-role IAM simulation and a bounded function change lookup are available. See [the agent guide](AGENT.md). SDK/replay contracts pass locally; actual model quality, real-incident improvement, and live AWS validation remain unmeasured. Datadog and alert ingestion are still pending.
+
 - Normalize an alert to a service/environment/time window; authenticated webhook ingestion with duplicate suppression.
 - Read scoped Datadog metrics, logs, and traces through a provider adapter.
 - Add a model behind an explicit data-sharing boundary and allowlisted tool interface.

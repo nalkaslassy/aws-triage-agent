@@ -92,6 +92,10 @@ class AWSCollector:
             url = f"https://console.aws.amazon.com/cloudwatch/home?region={region}#logsV2:log-groups"
         elif source.startswith("cloudwatch:"):
             url = f"https://console.aws.amazon.com/cloudwatch/home?region={region}#metricsV2:"
+        elif source.startswith("iam:"):
+            url = "https://console.aws.amazon.com/iam/home#/roles"
+        elif source.startswith("cloudtrail:"):
+            url = f"https://console.aws.amazon.com/cloudtrailv2/home?region={region}#/events"
         self.evidence.append(Evidence(
             f"E{len(self.evidence) + 1:03}", kind, resource, source, status, data,
             datetime.now(timezone.utc).isoformat(), source_url=url,

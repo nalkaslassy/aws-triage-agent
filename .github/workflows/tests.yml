@@ -19,6 +19,9 @@ jobs:
       - run: python sandbox/local_evaluation.py
         env:
           PYTHONPATH: src
+      - run: python sandbox/evaluate_agent.py
+        env:
+          PYTHONPATH: src
   aws-contracts:
     runs-on: ubuntu-latest
     steps:

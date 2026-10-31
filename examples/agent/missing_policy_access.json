@@ -1,0 +1,82 @@
+{
+  "manifest": {
+    "application": "synthetic-orders",
+    "account_id": "111122223333",
+    "region": "us-east-1",
+    "lambda_functions": [
+      "orders"
+    ],
+    "log_groups": [
+      "/aws/lambda/orders"
+    ],
+    "expected_tables": {
+      "orders": "orders-table"
+    }
+  },
+  "function": "orders",
+  "symptom": "Synthetic order requests are failing.",
+  "bundle": {
+    "schema_version": 1,
+    "application": "synthetic-orders",
+    "start": "2026-10-30T12:00:00Z",
+    "end": "2026-10-30T12:15:00Z",
+    "evidence": [
+      {
+        "id": "E001",
+        "kind": "log_signals",
+        "resource": "/aws/lambda/orders",
+        "source": "synthetic replay fixture",
+        "status": "observed",
+        "data": {
+          "access_denied": 1,
+          "function_name": "orders",
+          "samples": [
+            {
+              "signal": "access_denied",
+              "event_id": "local-event-1",
+              "request_id": "local-request-1",
+              "operation": "PutItem",
+              "target": "orders-table",
+              "timestamp": 1793361600000
+            }
+          ]
+        },
+        "collected_at": "2026-10-30T12:15:00Z"
+      }
+    ]
+  },
+  "followups": {
+    "permissions": [
+      {
+        "id": "Replay",
+        "kind": "permission_simulation",
+        "resource": "orders",
+        "source": "synthetic replay fixture",
+        "status": "unavailable",
+        "data": {
+          "reason": "Synthetic denied access to simulator"
+        },
+        "collected_at": "2026-10-30T12:15:00Z"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "action": "check",
+      "check": "permissions"
+    },
+    {
+      "action": "finish",
+      "candidates": [],
+      "next_steps": [
+        "review_iam",
+        "collect_missing"
+      ]
+    }
+  ],
+  "expected": {
+    "stop_reason": "finished",
+    "causes": []
+  },
+  "evaluation_note": "Synthetic scripted planner contract case; not a model quality measurement."
+}

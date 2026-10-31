@@ -40,6 +40,6 @@ Console pointers open the relevant service, not an immutable event permalink. Us
 
 ## Remaining work
 
-Live AWS validation, request/trace topology, deployment history, effective IAM inspection, full network path checks, representative client probes, Datadog ingestion, and model-driven investigation remain pending. These changes configure no cloud resources or production permissions.
+The [bounded adaptive runtime](AGENT.md) now supports opt-in model-selected follow-ups, current IAM simulation, and limited function change lookup. Replay/SDK contracts are tested; live model quality and AWS diagnosis remain unverified. Request/trace topology, full deployment/IAM history, effective authorization reconstruction, network paths, representative client probes, and Datadog ingestion remain pending. These changes configure no cloud resources or production permissions.
 
 References: [API metric definitions](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-metrics-and-dimensions.html), [log filtering and pagination](https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_FilterLogEvents.html).

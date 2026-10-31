@@ -37,7 +37,7 @@ Lambda configuration retrieval includes all environment variables in SDK memory,
 
 The optional sandbox operator helper is separate from collection. It reads the account identity and tagged CloudFormation stack, validates its outputs against the manifest, and sends at most one IAM-signed request to the stack's API. It may write one synthetic order. This requires existing stack-read and route-invoke permissions and never grants them, changes scenarios, or deploys resources. HTTP redirects are refused to protect signed headers. See [the sandbox guide](../sandbox/README.md).
 
-No LLM is integrated yet. Before adding one, define allowed fields, redaction, retention, provider destination, and per-investigation transmission rules. A generated suggestion never grants authority for remediation.
+A bounded Bedrock adapter is available with explicit model-data opt-in; live inference has not been exercised. The model receives curated evidence, not arbitrary raw log messages, full environments, or CloudTrail bodies. It proposes named checks; application code enforces scope, budgets, citations, and allowed next steps. Existing-profile `iam:SimulatePrincipalPolicy`, `cloudtrail:LookupEvents`, and `bedrock:InvokeModel` permissions may be needed for this opt-in workflow; the code grants none. See [the agent guide](AGENT.md) for transmitted fields, timeouts, and remaining evaluation. A generated suggestion never grants authority for remediation.
 
 ## Reporting suspected issues
 

@@ -2,6 +2,8 @@
 
 Current tests verify local investigation behavior and fake AWS responses. They do not establish diagnosis performance on real incidents or certify production readiness.
 
+The [adaptive replay suite](../sandbox/evaluate_agent.py) compares initial rule findings with scripted follow-up contracts for seven cases, including missing access, simulation counterevidence, noise, stale errors, unsafe tools, and unsupported change claims. It makes no model calls and does not establish AI benefit. Live runtime output records planner turns, executed checks, SDK operation count, elapsed time, and model token usage when available. Runtime elapsed time excludes backend initialization; SDK operation count includes that backend's identity check. Expected diagnoses must remain outside model context during future model-vs-rules evaluations.
+
 Initial sandbox scenarios:
 
 | Scenario | Expected result | Unacceptable result |

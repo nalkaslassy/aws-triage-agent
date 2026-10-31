@@ -6,7 +6,7 @@ The intended workflow is monitoring alert → scoped evidence collection → inv
 
 ## Current milestone: runnable investigation foundation
 
-This is an early prototype, not a production incident response system or a completed autonomous AI agent. The first milestone implements deterministic first-pass triage so evidence handling can be tested before adding a model.
+This is an early prototype. It includes deterministic first-pass triage and a bounded adaptive runtime with an opt-in Bedrock adapter. Local replay and SDK contracts are tested; live inference and AWS diagnosis quality remain unverified.
 
 Implemented:
 
@@ -19,11 +19,12 @@ Implemented:
 - Evidence-linked reports with resource names, collection times, sampled identifiers, and AWS console pointers.
 - Strict numeric/type checks, partial-evidence retention, and failure-context log classification.
 - Limited correlation between a failed table request and the matching function's current table mismatch.
+- A [bounded adaptive investigation loop](docs/AGENT.md) with read-only follow-ups, candidate/reference validation, replay cases, and an opt-in Bedrock tool-use adapter.
 - A [disposable Orders API sandbox](sandbox/README.md) with infrastructure as code, five local scenarios, and an operator-only signed request helper.
 - Account verification, explicit region/resource scope, limited collection windows and API calls.
-- No infrastructure changes by the investigator, shell execution, Secrets Manager/SSM secret reads, or model data transmission. The separate sandbox probe can write one synthetic order when explicitly run by an operator.
+- No infrastructure changes by the investigator, shell execution, or Secrets Manager/SSM secret reads. Model transmission requires explicit opt-in. The separate operator sandbox probe can write one synthetic order.
 
-Not implemented yet: Datadog ingestion, automatic alert triggers, traces, IAM policy evaluation, change correlation, DNS/client diagnostics, active connectivity testing, network path evaluation, ranked competing hypotheses, and model-driven follow-up checks. Collected security group and VPN configuration is retained as evidence, but this milestone does not automatically evaluate the complete network path or users' effective VPN authorization. Each is tracked in [the roadmap](docs/ROADMAP.md).
+Not implemented yet: Datadog ingestion, automatic alert triggers, trace retrieval, complete effective authorization evaluation, full deployment/IAM change correlation, and network path evaluation. The adaptive permission check is a current role/action/target simulation with explicit limits. Candidate ranking/model-driven selection are wired but not quality-validated with a real model. Collected network configuration does not establish the full path or effective VPN authorization. See [the roadmap](docs/ROADMAP.md).
 
 ## Run the demo
 

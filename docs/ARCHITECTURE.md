@@ -6,6 +6,8 @@ Monitoring alerts and optional reports identify an application, environment, sym
 
 The model will not receive arbitrary cloud credentials or choose unrestricted SDK operations. Deterministic code will execute allowlisted operations against manifest resources. Logs and external reports are untrusted data and cannot grant permission or instruct the investigator to run commands.
 
+The [bounded runtime](AGENT.md) implements this boundary for one function. Bedrock proposes a named check or a final candidate/reference structure; Python independently validates it. Follow-ups bind role/target inputs from live configuration and the operator's manifest. Repeated checks are cached. The journal and execution metrics are recorded, and invalid proposals stop the adaptive assessment while preserving deterministic triage.
+
 ## Implemented data flow
 
 1. `collect` validates the manifest, window, and authenticated account.

@@ -1,0 +1,87 @@
+{
+  "manifest": {
+    "application": "synthetic-orders",
+    "account_id": "111122223333",
+    "region": "us-east-1",
+    "lambda_functions": [
+      "orders"
+    ],
+    "log_groups": [
+      "/aws/lambda/orders"
+    ],
+    "expected_tables": {
+      "orders": "orders-table"
+    }
+  },
+  "function": "orders",
+  "symptom": "Synthetic order requests are failing.",
+  "bundle": {
+    "schema_version": 1,
+    "application": "synthetic-orders",
+    "start": "2026-10-30T12:00:00Z",
+    "end": "2026-10-30T12:15:00Z",
+    "evidence": [
+      {
+        "id": "E001",
+        "kind": "log_signals",
+        "resource": "/aws/lambda/orders",
+        "source": "synthetic replay fixture",
+        "status": "observed",
+        "data": {
+          "access_denied": 0,
+          "unverified_mentions": 1,
+          "message": "INFO documentation example: AccessDeniedException"
+        },
+        "collected_at": "2026-10-30T12:15:00Z"
+      }
+    ]
+  },
+  "followups": {
+    "changes": [
+      {
+        "id": "Replay",
+        "kind": "change_history",
+        "resource": "orders",
+        "source": "synthetic replay fixture",
+        "status": "observed",
+        "data": {
+          "events": [
+            {
+              "EventId": "change-1",
+              "EventName": "UpdateFunctionConfiguration",
+              "EventSource": "lambda.amazonaws.com",
+              "EventTime": "2026-10-30T12:00:00Z"
+            }
+          ]
+        },
+        "collected_at": "2026-10-30T12:15:00Z"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "action": "check",
+      "check": "changes"
+    },
+    {
+      "action": "finish",
+      "candidates": [
+        {
+          "cause": "authorization",
+          "supporting": [
+            "F001"
+          ],
+          "contradicting": []
+        }
+      ],
+      "next_steps": [
+        "collect_missing"
+      ]
+    }
+  ],
+  "expected": {
+    "stop_reason": "invalid_decision",
+    "causes": []
+  },
+  "evaluation_note": "Synthetic scripted planner contract case; not a model quality measurement."
+}

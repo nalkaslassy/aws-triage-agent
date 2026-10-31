@@ -91,6 +91,10 @@ def investigate(bundle: Bundle) -> Report:
                     "Application / platform team"))
         if item.kind in {"lambda_configuration", "lambda_concurrency", "security_group_configuration", "vpn_routes", "vpn_authorization"}:
             report.gaps.append(f"{item.id}: Current configuration snapshot; it does not establish historical incident-time configuration.")
+        if item.kind == "permission_simulation":
+            report.gaps.append(f"{item.id}: Current permission simulation; actual request/session context, resource policies, endpoint policies, and incident-time state may differ.")
+        if item.kind == "change_history":
+            report.gaps.append(f"{item.id}: Bounded regional function change lookup; no conclusion that a recent change caused the incident or that all IAM/deployment events were captured.")
     api_findings(bundle, report)
     correlate_targets(bundle, report)
     by_id = {item.id: item for item in bundle.evidence}
@@ -114,7 +118,7 @@ def markdown(report: Report) -> str:
 
     lines = [f"# Investigation: {safe(report.application)}", "",
              f"Window: {safe(report.start)} to {safe(report.end)}", "",
-             "Status: first-pass triage; remediation requires engineer review.", ""]
+             f"Status: {safe(report.mode)} triage; remediation requires engineer review.", ""]
     for finding in report.findings:
         references = ", ".join(f"[{safe(i)}](#{i.lower()})" for i in finding.evidence_ids)
         lines += [f"## {safe(finding.title)}", "",
@@ -147,6 +151,8 @@ def evidence_reference(item):
         "lambda_concurrency": ("reserved_concurrency",),
         "api_metrics": ("window", "start", "end", "requests", "server_errors", "client_errors", "latency_ms", "integration_latency_ms"),
         "log_signals": ("access_denied", "timeout", "exception", "resource_missing", "unverified_mentions"),
+        "permission_simulation": ("role", "action", "target", "decision", "missing_context"),
+        "change_history": ("events",),
     }.get(item.kind, ())
     details = {key: item.data[key] for key in fields if key in item.data}
     if item.kind == "log_signals":
