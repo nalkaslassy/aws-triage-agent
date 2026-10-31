@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aws-triage-agent"
+version = "0.1.0"
+description = "Evidence-first incident investigation for AWS applications and connectivity"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+aws = ["boto3>=1.35,<2"]
+
+[project.scripts]
+aws-triage = "aws_triage.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
