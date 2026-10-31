@@ -6,6 +6,8 @@ Offline evidence analysis, initial AWS collectors, reproducible examples, bounde
 
 ## 0.2 — First complete application investigation
 
+Status: deployment preparation implemented; live AWS validation pending. The Orders API template, structured error logs, five local scenarios, configuration/concurrency checks, sandbox manifest creation, and one-request IAM-signed operator probe are available. See [the lab guide](../sandbox/README.md). These are local contracts, not measured real-incident diagnosis results.
+
 - Deploy a small Orders API in a sandbox using infrastructure as code.
 - Add traces, deployment/change history, and scoped permission evidence.
 - Exercise permission removal, code exception, throttling, wrong dependency configuration, and a healthy baseline.

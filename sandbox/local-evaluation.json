@@ -1,0 +1,56 @@
+{
+  "evaluation_type": "local handler and mocked AWS observations; not live AWS validation",
+  "passed": true,
+  "scenarios": [
+    {
+      "scenario": "normal",
+      "passed": true,
+      "handler_status": 201,
+      "finding_titles": [],
+      "evidence_references_valid": true,
+      "evidence_excludes_fault_selector": true
+    },
+    {
+      "scenario": "permission_denied",
+      "passed": true,
+      "handler_status": 502,
+      "finding_titles": [
+        "Authorization failure appears in application logs"
+      ],
+      "evidence_references_valid": true,
+      "evidence_excludes_fault_selector": true
+    },
+    {
+      "scenario": "code_exception",
+      "passed": true,
+      "handler_status": 500,
+      "finding_titles": [
+        "Application exception appears in logs"
+      ],
+      "evidence_references_valid": true,
+      "evidence_excludes_fault_selector": true
+    },
+    {
+      "scenario": "wrong_table",
+      "passed": true,
+      "handler_status": 502,
+      "finding_titles": [
+        "A dependency reports a missing resource",
+        "Configured table differs from the application manifest"
+      ],
+      "evidence_references_valid": true,
+      "evidence_excludes_fault_selector": true
+    },
+    {
+      "scenario": "throttle",
+      "passed": true,
+      "handler_status": null,
+      "finding_titles": [
+        "Function reserved concurrency is currently zero",
+        "Lambda throttling observed"
+      ],
+      "evidence_references_valid": true,
+      "evidence_excludes_fault_selector": true
+    }
+  ]
+}

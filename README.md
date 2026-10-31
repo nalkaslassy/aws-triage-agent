@@ -14,8 +14,10 @@ Implemented:
 - Findings that reference evidence IDs and distinguish observed failures from hypotheses.
 - Suggested verification steps, responsible teams, and explicit visibility gaps.
 - Optional AWS collection of Lambda metrics, bounded log samples, explicitly named security group configuration, and Client VPN route/authorization/session snapshots.
+- Current Lambda table configuration and concurrency snapshots, with checks for intended-target mismatch and concurrency disabled at zero.
+- A [disposable Orders API sandbox](sandbox/README.md) with infrastructure as code, five local scenarios, and an operator-only signed request helper.
 - Account verification, explicit region/resource scope, limited collection windows and API calls.
-- No infrastructure changes, shell execution, secret retrieval, or model data transmission.
+- No infrastructure changes by the investigator, shell execution, Secrets Manager/SSM secret reads, or model data transmission. The separate sandbox probe can write one synthetic order when explicitly run by an operator.
 
 Not implemented yet: Datadog ingestion, automatic alert triggers, traces, IAM policy evaluation, change correlation, DNS/client diagnostics, active connectivity testing, network path evaluation, ranked competing hypotheses, and model-driven follow-up checks. Collected security group and VPN configuration is retained as evidence, but this milestone does not automatically evaluate the complete network path or users' effective VPN authorization. Each is tracked in [the roadmap](docs/ROADMAP.md).
 
@@ -80,3 +82,7 @@ AWS already offers incident investigation through DevOps Agent and CloudWatch in
 - `docs/`: architecture, access model, evaluation, and milestones.
 
 No open-source license has been selected yet. Keep the repository private while the prototype is being developed.
+
+## Next step: live sandbox validation
+
+The sandbox deployment code and local scenario checks are available. No AWS resources have been deployed and live diagnosis remains unverified. Start with [the sandbox guide](sandbox/README.md): validate/build the template, review the deployment in your sandbox account, send a normal request, and collect its evidence before injecting a fault.

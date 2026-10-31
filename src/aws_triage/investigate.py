@@ -50,6 +50,11 @@ def investigate(bundle: Bundle) -> Report:
                  ["Inspect the original exception and request ID in the logging system.",
                   "Compare deployment timing and a working version before proposing a rollback."],
                  "Application team"),
+                ("resource_missing", "A dependency reports a missing resource",
+                 "A dependency returned ResourceNotFoundException. A wrong target name, region, or missing resource is possible; the exact cause remains unverified.",
+                 ["Compare the request's actual dependency name and region against the intended configuration.",
+                  "Check whether the intended resource exists before changing permissions."],
+                 "Application / platform team"),
             ]:
                 if item.data.get(signal, 0) > 0:
                     report.findings.append(Finding(title, "hypothesis", reason, [item.id], steps, owner))
@@ -58,6 +63,27 @@ def investigate(bundle: Bundle) -> Report:
                 f"{item.id}: VPN sessions are a current snapshot, not historical proof of user reachability. "
                 "Compare affected and working cohorts using authorized identity and client-side evidence."
             )
+        if item.kind == "lambda_configuration" and item.status == "observed":
+            actual, expected = item.data.get("orders_table"), item.data.get("expected_table")
+            if actual and expected and actual != expected:
+                report.findings.append(Finding(
+                    "Configured table differs from the application manifest", "confirmed_observation",
+                    "The current ORDERS_TABLE setting differs from the manifest's intended target. "
+                    "The manifest may be stale; this snapshot does not prove which configuration was active at incident onset.",
+                    [item.id], ["Verify the intended target with the application owner.",
+                                "Correlate the mismatch with failing dependency requests and deployment timing."],
+                    "Application / platform team"))
+        if item.kind == "lambda_concurrency" and item.status == "observed":
+            if item.data.get("reserved_concurrency") == 0:
+                report.findings.append(Finding(
+                    "Function reserved concurrency is currently zero", "confirmed_observation",
+                    "The current configuration prevents this function from processing invocations. "
+                    "This may be intentional; historical configuration and the cause of the change remain unverified.",
+                    [item.id], ["Confirm whether disabling invocation was intentional.",
+                                "Correlate throttles and incident timing before restoring the intended concurrency configuration."],
+                    "Application / platform team"))
+        if item.kind in {"lambda_configuration", "lambda_concurrency", "security_group_configuration", "vpn_routes", "vpn_authorization"}:
+            report.gaps.append(f"{item.id}: Current configuration snapshot; it does not establish historical incident-time configuration.")
     if not report.findings:
         report.gaps.append("No supported failure explanation was established. This does not establish application or network health.")
     report.gaps.append(

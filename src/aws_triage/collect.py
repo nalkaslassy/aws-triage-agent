@@ -1,5 +1,6 @@
 """Explicitly scoped AWS collection; no arbitrary API or shell execution."""
 
+import json
 import re
 from datetime import datetime, timezone
 
@@ -25,6 +26,13 @@ def validate_manifest(manifest):
     endpoint = manifest.get("client_vpn_endpoint")
     if endpoint is not None and not re.fullmatch(r"cvpn-endpoint-[0-9a-f]{8,17}", endpoint):
         raise ValueError("Invalid Client VPN endpoint ID")
+    expected = manifest.get("expected_tables", {})
+    if not isinstance(expected, dict) or any(
+        function not in manifest.get("lambda_functions", [])
+        or not isinstance(table, str) or not re.fullmatch(r"[A-Za-z0-9_.-]{3,255}", table)
+        for function, table in expected.items()
+    ):
+        raise ValueError("expected_tables must map configured functions to explicit DynamoDB table names")
 
 
 class AWSCollector:
@@ -79,9 +87,10 @@ class AWSCollector:
         self.add("lambda_metrics", function, "cloudwatch:GetMetricStatistics", data)
 
     def logs(self, group):
-        counts = {"access_denied": 0, "timeout": 0, "exception": 0}
+        counts = {"access_denied": 0, "timeout": 0, "exception": 0, "resource_missing": 0}
         patterns = {"access_denied": re.compile(r"AccessDenied(?:Exception)?|not authorized to perform", re.I),
                     "timeout": re.compile(r"timed?\s*out|ETIMEDOUT|TimeoutError", re.I),
+                    "resource_missing": re.compile(r"ResourceNotFoundException"),
                     "exception": re.compile(r"Traceback \(most recent call last\)|Unhandled\s+exception", re.I)}
         token, seen, sampled = None, set(), []
         for _ in range(3):
@@ -97,13 +106,36 @@ class AWSCollector:
                 if identity:
                     seen.add(identity)
                 message = event.get("message", "")
+                # Recognize the lab's structured application errors without
+                # preserving arbitrary message text or trusting it as an instruction.
+                try:
+                    structured = json.loads(message[message.index("{"):])
+                except (ValueError, TypeError):
+                    structured = {}
+                if isinstance(structured, dict) and structured.get("event") == "application_exception":
+                    counts["exception"] += 1
+                    if len(sampled) < 20:
+                        sampled.append({"signal": "exception", "event_id": identity,
+                                        "timestamp": event.get("timestamp"),
+                                        "stream": event.get("logStreamName")})
                 for name, pattern in patterns.items():
                     if pattern.search(message):
                         counts[name] += 1
                         if len(sampled) < 20:
-                            sampled.append({"signal": name, "event_id": identity,
-                                            "timestamp": event.get("timestamp"),
-                                            "stream": event.get("logStreamName")})
+                            sample = {"signal": name, "event_id": identity,
+                                      "timestamp": event.get("timestamp"),
+                                      "stream": event.get("logStreamName")}
+                            if isinstance(structured, dict):
+                                for field, pattern in {
+                                    "request_id": r"[A-Za-z0-9-]{1,64}",
+                                    "target": r"[A-Za-z0-9_.-]{3,255}",
+                                    "operation": r"PutItem",
+                                    "error_code": r"[A-Za-z]{1,64}",
+                                }.items():
+                                    value = structured.get(field)
+                                    if isinstance(value, str) and re.fullmatch(pattern, value):
+                                        sample[field] = value
+                            sampled.append(sample)
             next_token = response.get("nextToken")
             if next_token and next_token == token:
                 self.add("log_signals", group, "logs:FilterLogEvents",
@@ -116,6 +148,26 @@ class AWSCollector:
                  {**counts, "samples": sampled,
                   "reason": "Three-page log budget reached; this is a sample, not a complete error count." if token else ""},
                  "partial" if token else "observed")
+
+    def function_configuration(self, function):
+        response = self.call("lambda", "get_function_configuration", FunctionName=function)
+        environment = response.get("Environment", {})
+        data = {key: response.get(key) for key in (
+            "FunctionArn", "Role", "CodeSha256", "LastModified", "RevisionId", "State", "LastUpdateStatus")}
+        # Only the explicitly non-secret table target is retained, never the
+        # full environment (which Lambda returns in the API response).
+        data["orders_table"] = environment.get("Variables", {}).get("ORDERS_TABLE")
+        data["expected_table"] = self.manifest.get("expected_tables", {}).get(function)
+        if environment.get("Error"):
+            self.add("lambda_configuration", function, "lambda:GetFunctionConfiguration",
+                     {**data, "reason": "Lambda environment configuration could not be read."}, "partial")
+        else:
+            self.add("lambda_configuration", function, "lambda:GetFunctionConfiguration", data)
+
+    def function_concurrency(self, function):
+        response = self.call("lambda", "get_function_concurrency", FunctionName=function)
+        self.add("lambda_concurrency", function, "lambda:GetFunctionConcurrency",
+                 {"reserved_concurrency": response.get("ReservedConcurrentExecutions")})
 
     def security_groups(self):
         groups = self.manifest.get("security_groups", [])
@@ -142,6 +194,10 @@ class AWSCollector:
                  {"account_id": identity["Account"], "region": self.manifest["region"]})
         for function in self.manifest.get("lambda_functions", []):
             self.attempt("lambda_metrics", function, "cloudwatch:GetMetricStatistics", lambda f=function: self.metrics(f))
+            self.attempt("lambda_configuration", function, "lambda:GetFunctionConfiguration",
+                         lambda f=function: self.function_configuration(f))
+            self.attempt("lambda_concurrency", function, "lambda:GetFunctionConcurrency",
+                         lambda f=function: self.function_concurrency(f))
         for group in self.manifest.get("log_groups", []):
             self.attempt("log_signals", group, "logs:FilterLogEvents", lambda g=group: self.logs(g))
         self.attempt("security_group_configuration", "configured groups", "ec2:DescribeSecurityGroups", self.security_groups)

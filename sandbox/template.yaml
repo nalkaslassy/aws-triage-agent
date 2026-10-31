@@ -1,0 +1,144 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AWS Triage Agent disposable Orders API sandbox; deploy only to a test account.
+
+Parameters:
+  FaultMode:
+    Type: String
+    Default: normal
+    AllowedValues: [normal, permission_denied, code_exception, wrong_table, throttle]
+  BuildRevision:
+    Type: String
+    Default: local-dev
+    AllowedPattern: '[A-Za-z0-9._-]{1,64}'
+
+Conditions:
+  HasWritePermission: !Not [!Equals [!Ref FaultMode, permission_denied]]
+  WrongTable: !Equals [!Ref FaultMode, wrong_table]
+  CodeException: !Equals [!Ref FaultMode, code_exception]
+  Throttled: !Equals [!Ref FaultMode, throttle]
+
+Resources:
+  OrdersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: order_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: order_id
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: expires_at
+        Enabled: true
+      Tags:
+        - Key: Project
+          Value: aws-triage-agent
+        - Key: Environment
+          Value: sandbox
+
+  OrdersLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${AWS::StackName}-orders'
+      RetentionInDays: 3
+
+  OrdersRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ApplicationLogsAndTraces
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [logs:CreateLogStream, logs:PutLogEvents]
+                Resource: !GetAtt OrdersLogs.Arn
+              - Effect: Allow
+                Action: [xray:PutTraceSegments, xray:PutTelemetryRecords]
+                Resource: '*'
+        - !If
+          - HasWritePermission
+          - PolicyName: WriteOrders
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action: dynamodb:PutItem
+                  Resource:
+                    - !GetAtt OrdersTable.Arn
+                    # Authorize this nonexistent lab target so wrong_table tests
+                    # missing-resource behavior rather than a second IAM denial.
+                    - !Sub '${OrdersTable.Arn}-missing'
+          - !Ref AWS::NoValue
+
+  OrdersApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: sandbox
+      EndpointConfiguration: REGIONAL
+      TracingEnabled: true
+      Auth:
+        DefaultAuthorizer: AWS_IAM
+        InvokeRole: NONE
+      MethodSettings:
+        - ResourcePath: '/*'
+          HttpMethod: '*'
+          ThrottlingRateLimit: 2
+          ThrottlingBurstLimit: 5
+      Tags:
+        Project: aws-triage-agent
+        Environment: sandbox
+
+  OrdersFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: OrdersLogs
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-orders'
+      CodeUri: orders/
+      Handler: app.handler
+      Runtime: python3.12
+      MemorySize: 128
+      Timeout: 5
+      Role: !GetAtt OrdersRole.Arn
+      Tracing: Active
+      ReservedConcurrentExecutions: !If [Throttled, 0, !Ref AWS::NoValue]
+      Environment:
+        Variables:
+          ORDERS_TABLE: !If [WrongTable, !Sub '${OrdersTable}-missing', !Ref OrdersTable]
+          FAULT_MODE: !If [CodeException, code_exception, normal]
+          BUILD_REVISION: !Ref BuildRevision
+      Tags:
+        Project: aws-triage-agent
+        Environment: sandbox
+      Events:
+        CreateOrder:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OrdersApi
+            Path: /orders
+            Method: post
+
+Outputs:
+  Application:
+    Value: !Sub '${AWS::StackName}-orders'
+  FunctionName:
+    Value: !Ref OrdersFunction
+  FunctionArn:
+    Value: !GetAtt OrdersFunction.Arn
+  ExpectedTable:
+    Value: !Ref OrdersTable
+  LogGroup:
+    Value: !Ref OrdersLogs
+  ApiId:
+    Value: !Ref OrdersApi
+  ApiUrl:
+    Value: !Sub 'https://${OrdersApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/sandbox/orders'

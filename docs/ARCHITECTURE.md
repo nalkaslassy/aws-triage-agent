@@ -13,6 +13,8 @@ The model will not receive arbitrary cloud credentials or choose unrestricted SD
 3. `analyze` reads a bundle offline and applies a small set of deterministic checks.
 4. A report includes evidence IDs, observations or hypotheses, next checks, suggested owners, and gaps.
 
+The sandbox lab adds an operator-only signed HTTP request and deployment template outside the investigator. The template's fault selector and unfiltered environment are excluded from investigator input. The investigator can compare the current `ORDERS_TABLE` with the manifest's intended table and observe reserved concurrency at zero; it does not infer an exact historical cause from those snapshots.
+
 Observation time and incident time are separate. Metrics/logs cover the requested window; network configuration and VPN sessions describe current state when collected. Historical configuration, historical user authorization, and the onset of a network incident cannot be inferred from current state.
 
 ## Network investigation target

@@ -13,3 +13,5 @@ evidence/
 dist/
 build/
 application.local.json
+.aws-sam/
+samconfig.toml

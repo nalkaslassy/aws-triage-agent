@@ -33,9 +33,31 @@ def main(argv=None):
     collect.add_argument("--end", required=True)
     collect.add_argument("--profile")
     collect.add_argument("--out", required=True)
+    sandbox = commands.add_parser("sandbox", help="Operator tools for the disposable sandbox; probe writes one synthetic order")
+    sandbox_commands = sandbox.add_subparsers(dest="sandbox_command", required=True)
+    manifest_cmd = sandbox_commands.add_parser("manifest", help="Create a manifest from sandbox stack outputs")
+    manifest_cmd.add_argument("--outputs", required=True)
+    manifest_cmd.add_argument("--out", required=True)
+    probe_cmd = sandbox_commands.add_parser("probe", help="POST one synthetic order to the verified sandbox API")
+    probe_cmd.add_argument("--manifest", required=True)
+    probe_cmd.add_argument("--profile")
+    probe_cmd.add_argument("--out", required=True)
     args = parser.parse_args(argv)
     try:
-        if args.command == "collect":
+        if args.command == "sandbox":
+            from .sandbox import manifest_from_stack, probe
+            # Validate the output path before a request with side effects.
+            if Path(args.out).exists() or Path(args.out).is_symlink():
+                raise FileExistsError("Output already exists")
+            if args.sandbox_command == "manifest":
+                value = manifest_from_stack(json.loads(Path(args.outputs).read_text()))
+            else:
+                import boto3
+                manifest = json.loads(Path(args.manifest).read_text())
+                value = probe(boto3.Session(profile_name=args.profile), manifest)
+            write_private(args.out, json.dumps(value, indent=2) + "\n")
+            print(f"Sandbox result written to {args.out}.")
+        elif args.command == "collect":
             import boto3
             manifest = json.loads(Path(args.manifest).read_text())
             bundle = AWSCollector(boto3.Session(profile_name=args.profile), manifest, args.start, args.end).collect()

@@ -8,6 +8,8 @@ The collector performs fixed read operations. It cannot modify the investigated 
 | --- | --- | --- |
 | `sts:GetCallerIdentity` | Fail closed on account mismatch | Existing authenticated identity |
 | `cloudwatch:GetMetricStatistics` | Lambda Errors, Invocations, Throttles | Region/account role boundary; metric APIs may require `Resource: *` |
+| `lambda:GetFunctionConfiguration` | Current role/code metadata and allowlisted table target | Explicit configured function ARNs; API response includes full environment in memory |
+| `lambda:GetFunctionConcurrency` | Current reserved concurrency | Explicit configured function ARNs |
 | `logs:FilterLogEvents` | Bounded application error samples | Explicit application log-group ARNs |
 | `ec2:DescribeSecurityGroups` | Configured security groups only | Region/account boundary; API resource-level restrictions are limited |
 | `ec2:DescribeClientVpnConnections` | Current session status snapshot | Optional; region/account boundary |
@@ -30,6 +32,10 @@ This table is an implementation inventory, not a deployable IAM policy. Do not a
 Raw log messages are processed in memory and are not stored in generated bundles. Event IDs and network/resource identifiers can still be sensitive. Files are created with mode `0600` and refuse overwrite; parent-directory and backup security remain the operator's responsibility. Git ignores `evidence/`, `reports/`, local manifests, credential-like files, and environment files. File permissions do not substitute for access controls on a shared computer.
 
 Never commit real telemetry or credentials. Use existing short-lived credential profiles when collecting. Secrets Manager, SSM decryption, arbitrary S3 reads, resource modification, arbitrary shell commands, and application request execution are not part of the collector.
+
+Lambda configuration retrieval includes all environment variables in SDK memory, even though only `ORDERS_TABLE` is retained in the bundle. Do not authorize collection where reading those variables is forbidden. Current configuration is not historical proof of incident-time state. The collector does not evaluate the execution role's effective permissions yet.
+
+The optional sandbox operator helper is separate from collection. It reads the account identity and tagged CloudFormation stack, validates its outputs against the manifest, and sends at most one IAM-signed request to the stack's API. It may write one synthetic order. This requires existing stack-read and route-invoke permissions and never grants them, changes scenarios, or deploys resources. HTTP redirects are refused to protect signed headers. See [the sandbox guide](../sandbox/README.md).
 
 No LLM is integrated yet. Before adding one, define allowed fields, redaction, retention, provider destination, and per-investigation transmission rules. A generated suggestion never grants authority for remediation.
 
