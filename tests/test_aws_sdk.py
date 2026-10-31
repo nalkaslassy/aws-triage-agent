@@ -7,6 +7,7 @@ from unittest.mock import Mock
 
 from aws_triage.collect import AWSCollector
 from aws_triage.sandbox import manifest_from_stack, probe
+from aws_triage.api_metrics import collect_api_metrics, SPECS
 
 HAS_SDK = importlib.util.find_spec("boto3") is not None
 
@@ -50,6 +51,25 @@ class SDKContractTests(unittest.TestCase):
             stub.add_response("get_function_concurrency", {"ReservedConcurrentExecutions": 0}, {"FunctionName": "orders"})
             self.collector.function_concurrency("orders")
         self.assertEqual(self.collector.evidence[0].data["reserved_concurrency"], 0)
+
+    def test_api_metric_requests_against_sdk_schema(self):
+        from botocore.stub import Stubber
+        client = self.session.client("cloudwatch")
+        self.collector.clients["cloudwatch"] = client
+        api = {"api_id": "abc123def4", "api_name": "orders-api", "stage": "sandbox"}
+        duration = self.collector.end - self.collector.start
+        with Stubber(client) as stub:
+            for start, end in ((self.collector.start, self.collector.end), (self.collector.start - duration, self.collector.start)):
+                for name, metric, stats in SPECS:
+                    point = {"Timestamp": start, **{stat: 100.0 for stat in stats}}
+                    stub.add_response("get_metric_statistics", {"Datapoints": [point]}, {
+                        "Namespace": "AWS/ApiGateway", "MetricName": metric,
+                        "Dimensions": [{"Name": "ApiName", "Value": "orders-api"}, {"Name": "Stage", "Value": "sandbox"}],
+                        "StartTime": start, "EndTime": end, "Period": 60, "Statistics": stats})
+            collect_api_metrics(self.collector, api)
+            stub.assert_no_pending_responses()
+        self.assertEqual(self.collector.evidence[0].data["requests"], 100)
+        self.assertEqual(self.collector.evidence[1].data["window"], "baseline")
 
     def test_client_vpn_request_shapes(self):
         from botocore.stub import Stubber

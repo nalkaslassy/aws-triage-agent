@@ -34,9 +34,12 @@ def manifest_from_stack(description):
         raise ValueError("Stack outputs do not match the sandbox layout")
     if outputs["LogGroup"] != "/aws/lambda/" + function:
         raise ValueError("Unexpected log group")
+    if outputs["ApiName"] != name + "-api":
+        raise ValueError("Unexpected API metric name")
     manifest = {"application": function, "account_id": account, "region": region,
                 "lambda_functions": [function], "log_groups": [outputs["LogGroup"]],
                 "security_groups": [], "expected_tables": {function: outputs["ExpectedTable"]},
+                "rest_apis": [{"api_id": outputs["ApiId"], "api_name": outputs["ApiName"], "stage": "sandbox"}],
                 "sandbox": {"stack_id": stack["StackId"], "api_id": outputs["ApiId"]}}
     validate_manifest(manifest)
     return manifest

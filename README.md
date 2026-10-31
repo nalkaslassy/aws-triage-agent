@@ -15,6 +15,10 @@ Implemented:
 - Suggested verification steps, responsible teams, and explicit visibility gaps.
 - Optional AWS collection of Lambda metrics, bounded log samples, explicitly named security group configuration, and Client VPN route/authorization/session snapshots.
 - Current Lambda table configuration and concurrency snapshots, with checks for intended-target mismatch and concurrency disabled at zero.
+- REST API request/error counts, weighted mean latency, and an adjacent equal-length baseline.
+- Evidence-linked reports with resource names, collection times, sampled identifiers, and AWS console pointers.
+- Strict numeric/type checks, partial-evidence retention, and failure-context log classification.
+- Limited correlation between a failed table request and the matching function's current table mismatch.
 - A [disposable Orders API sandbox](sandbox/README.md) with infrastructure as code, five local scenarios, and an operator-only signed request helper.
 - Account verification, explicit region/resource scope, limited collection windows and API calls.
 - No infrastructure changes by the investigator, shell execution, Secrets Manager/SSM secret reads, or model data transmission. The separate sandbox probe can write one synthetic order when explicitly run by an operator.
@@ -28,10 +32,13 @@ Python 3.11+ is required. The offline core has no third-party runtime dependenci
 ```bash
 PYTHONPATH=src python -m aws_triage.cli analyze examples/permission_failure.json
 PYTHONPATH=src python -m aws_triage.cli analyze examples/network_unknown.json --format json
+PYTHONPATH=src python -m aws_triage.cli analyze examples/api_http_failure.json
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
 All example bundles contain synthetic data. They do not represent customer incidents or validated diagnoses.
+
+The [API failure report example](examples/api_failure_report.md) shows API errors despite zero Lambda execution errors. Findings link to an evidence index. Live collector reports include console pointers that open the relevant AWS service, not an immutable event permalink.
 
 To install the command locally:
 
@@ -60,7 +67,9 @@ Supply your actual incident window (at most one hour). Output files are created 
 
 The collector uses existing boto3 credentials and checks the account before reading telemetry. It does not create roles, grant access, run probes, query arbitrary resources, or deploy anything. A manifest is a collection boundary, not an IAM security boundary; enforce the permitted resources and actions using your role policy. See [security and access](docs/SECURITY.md).
 
-Raw log messages are processed locally to identify a few error signatures, then discarded. The bundle retains sample event IDs, timestamps, and stream identifiers for follow-up in the logging system. This is pattern matching, not semantic proof: a quoted or handled error can match a pattern. No raw messages are sent to an LLM.
+Raw log messages are processed locally, then discarded. A bounded error-keyword query selects candidates; structured failure events and supported error-level context determine which signals become hypotheses. Informational and bare keyword mentions are excluded. Some formats and failures logged at other levels can be missed. No raw messages are sent to an LLM.
+
+For REST API collection, add `rest_apis` entries with `api_id`, `api_name`, and `stage` (maximum two). API windows require minute-aligned UTC boundaries and include a preceding equal-length baseline. Queries use `ApiName`/`Stage` dimensions; ensure API names are unique in the account/region. Missing datapoints remain unknown. See [investigation behavior](docs/INVESTIGATION.md) for calculations and limits.
 
 ## Investigation principles
 

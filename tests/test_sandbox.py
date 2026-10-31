@@ -24,7 +24,7 @@ def stack_description():
                                  {"Key": "Environment", "Value": "sandbox"}],
                         "Outputs": [{"OutputKey": key, "OutputValue": value} for key, value in {
                             "FunctionName": "triage-sandbox-test-orders", "LogGroup": "/aws/lambda/triage-sandbox-test-orders",
-                            "ExpectedTable": "orders-table", "ApiId": "abc123def4"}.items()]}]}
+                            "ExpectedTable": "orders-table", "ApiId": "abc123def4", "ApiName": "triage-sandbox-test-api"}.items()]}]}
 
 
 class SandboxTests(unittest.TestCase):

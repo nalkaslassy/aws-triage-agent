@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "application": "synthetic-orders-demo",
+  "start": "2026-10-30T12:00:00Z",
+  "end": "2026-10-30T12:15:00Z",
+  "evidence": [
+    {
+      "id": "E001",
+      "kind": "lambda_metrics",
+      "resource": "orders-function",
+      "source": "synthetic fixture",
+      "status": "observed",
+      "collected_at": "2026-10-30T12:16:00Z",
+      "data": {
+        "Errors": 0,
+        "Invocations": 100,
+        "Throttles": 0
+      }
+    },
+    {
+      "id": "E002",
+      "kind": "api_metrics",
+      "resource": "orders-api/sandbox (abc123def4)",
+      "source": "synthetic fixture",
+      "status": "observed",
+      "collected_at": "2026-10-30T12:16:00Z",
+      "data": {
+        "window": "incident",
+        "start": "2026-10-30T12:00:00Z",
+        "end": "2026-10-30T12:15:00Z",
+        "requests": 100,
+        "server_errors": 35,
+        "client_errors": 0,
+        "latency_ms": 500,
+        "integration_latency_ms": 450
+      }
+    },
+    {
+      "id": "E003",
+      "kind": "api_metrics",
+      "resource": "orders-api/sandbox (abc123def4)",
+      "source": "synthetic fixture",
+      "status": "observed",
+      "collected_at": "2026-10-30T12:16:00Z",
+      "data": {
+        "window": "baseline",
+        "start": "2026-10-30T11:45:00Z",
+        "end": "2026-10-30T12:00:00Z",
+        "requests": 100,
+        "server_errors": 1,
+        "client_errors": 0,
+        "latency_ms": 150,
+        "integration_latency_ms": 120
+      }
+    }
+  ]
+}

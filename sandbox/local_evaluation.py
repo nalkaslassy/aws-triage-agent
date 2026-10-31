@@ -85,7 +85,7 @@ def run_case(mode):
         collector.add("lambda_metrics", "synthetic-orders", "stubbed CloudWatch metrics",
                       {"Errors": 0, "Invocations": 0, "Throttles": 1})
     bundle = Bundle("synthetic-orders", START, END,
-                    [replace(e, source="local-only / " + e.source) for e in collector.evidence])
+                    [replace(e, source="local-only / " + e.source, source_url=None) for e in collector.evidence])
     return response, bundle, investigate(bundle)
 
 

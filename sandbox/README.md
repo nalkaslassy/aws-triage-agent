@@ -64,6 +64,8 @@ aws-triage sandbox manifest --outputs evidence/stack-normal.json \
 
 The generated manifest identifies the account, region, function, log group, intended table, stack ARN, and API ID. It excludes CloudFormation's fault-selection parameter. The investigator does not read stack parameters or the function's `FAULT_MODE` environment setting.
 
+The updated template also names/outputs the API metric name and the manifest includes a REST API stage. If you deployed an earlier template, redeploy this version and generate a fresh manifest with a new filename. API collection reads the incident and preceding equal-length baseline using minute-aligned UTC boundaries. A newly created API may not have usable baseline data; that remains an explicit gap.
+
 The collector now needs `lambda:GetFunctionConfiguration` and `lambda:GetFunctionConcurrency` for the explicitly configured function, in addition to its existing metric/log permissions. Configuration retrieval includes the environment in SDK memory; only the `ORDERS_TABLE` value is retained. Do not collect a production function if merely reading its environment is outside your authorization.
 
 ## Send one synthetic request

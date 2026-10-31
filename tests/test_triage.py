@@ -114,7 +114,7 @@ class CollectionTests(unittest.TestCase):
         self.assertIsNone(collector.evidence[0].data["Errors"])
 
     def test_log_page_budget_and_message_discard(self):
-        pages = [{"events": [{"eventId": str(n), "message": "AccessDeniedException SECRET_VALUE"}],
+        pages = [{"events": [{"eventId": str(n), "message": "ERROR AccessDeniedException SECRET_VALUE"}],
                   "nextToken": str(n + 1)} for n in range(3)]
         collector = FakeCollector(pages)
         collector.logs("/aws/lambda/orders")
@@ -125,7 +125,7 @@ class CollectionTests(unittest.TestCase):
         self.assertNotIn("SECRET_VALUE", json.dumps(item.data))
 
     def test_repeated_log_event_not_double_counted(self):
-        response = {"events": [{"eventId": "same", "message": "TimeoutError"}]}
+        response = {"events": [{"eventId": "same", "message": "ERROR TimeoutError"}]}
         collector = FakeCollector([{**response, "nextToken": "next"}, response])
         collector.logs("/aws/lambda/orders")
         self.assertEqual(collector.evidence[0].data["timeout"], 1)

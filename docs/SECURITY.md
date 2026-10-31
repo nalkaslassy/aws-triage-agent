@@ -7,7 +7,7 @@ The collector performs fixed read operations. It cannot modify the investigated 
 | Operation | Purpose | Scope guidance |
 | --- | --- | --- |
 | `sts:GetCallerIdentity` | Fail closed on account mismatch | Existing authenticated identity |
-| `cloudwatch:GetMetricStatistics` | Lambda Errors, Invocations, Throttles | Region/account role boundary; metric APIs may require `Resource: *` |
+| `cloudwatch:GetMetricStatistics` | Lambda and optional REST API incident/baseline metrics | Region/account role boundary; metric APIs may require `Resource: *` |
 | `lambda:GetFunctionConfiguration` | Current role/code metadata and allowlisted table target | Explicit configured function ARNs; API response includes full environment in memory |
 | `lambda:GetFunctionConcurrency` | Current reserved concurrency | Explicit configured function ARNs |
 | `logs:FilterLogEvents` | Bounded application error samples | Explicit application log-group ARNs |
@@ -20,10 +20,10 @@ This table is an implementation inventory, not a deployable IAM policy. Do not a
 
 ## Collection limits
 
-- One account and explicit region; maximum five functions, five log groups, five security groups, one Client VPN endpoint.
+- One account and explicit region; maximum five functions, five log groups, five security groups, one Client VPN endpoint, and two REST API stages.
 - Incident window at most one hour.
-- At most 50 SDK operation attempts at the application layer; SDK retry configuration permits up to two HTTP attempts per operation.
-- At most three log pages of up to 100 events each per group; pagination gaps are disclosed.
+- At most 75 SDK operation attempts at the application layer; SDK retry configuration permits up to two HTTP attempts per operation. Optional API collection adds a preceding equal-length baseline.
+- At most three filtered log pages of up to 100 candidate events each per group; pagination gaps are disclosed and partial evidence is retained.
 - VPN snapshots collect one page of up to 100 records and disclose continuation.
 - API timeouts are bounded; there is not yet a global wall-clock cancellation mechanism.
 

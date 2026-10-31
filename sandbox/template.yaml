@@ -83,6 +83,7 @@ Resources:
   OrdersApi:
     Type: AWS::Serverless::Api
     Properties:
+      Name: !Sub '${AWS::StackName}-api'
       StageName: sandbox
       EndpointConfiguration: REGIONAL
       TracingEnabled: true
@@ -140,5 +141,7 @@ Outputs:
     Value: !Ref OrdersLogs
   ApiId:
     Value: !Ref OrdersApi
+  ApiName:
+    Value: !Sub '${AWS::StackName}-api'
   ApiUrl:
     Value: !Sub 'https://${OrdersApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/sandbox/orders'

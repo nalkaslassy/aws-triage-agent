@@ -1,13 +1,17 @@
 """Explicitly scoped AWS collection; no arbitrary API or shell execution."""
 
-import json
 import re
 from datetime import datetime, timezone
 
 from .model import Bundle, Evidence, utc_time
+from .signals import classify
+from .api_metrics import collect_api_metrics
+from urllib.parse import quote
 
 
 def validate_manifest(manifest):
+    if not isinstance(manifest, dict):
+        raise ValueError("Manifest must be an object")
     if not re.fullmatch(r"\d{12}", manifest.get("account_id", "")):
         raise ValueError("A 12-digit account_id is required")
     if not re.fullmatch(r"[a-z]{2}(?:-[a-z]+)+-\d", manifest.get("region", "")):
@@ -33,16 +37,33 @@ def validate_manifest(manifest):
         for function, table in expected.items()
     ):
         raise ValueError("expected_tables must map configured functions to explicit DynamoDB table names")
+    apis = manifest.get("rest_apis", [])
+    if not isinstance(apis, list) or len(apis) > 2:
+        raise ValueError("At most two REST APIs may be configured")
+    identities = set()
+    for api in apis:
+        if not isinstance(api, dict) or set(api) != {"api_id", "api_name", "stage"}:
+            raise ValueError("REST APIs require api_id, api_name, and stage")
+        for key, pattern in {"api_id": r"[a-z0-9]{10}", "api_name": r"[A-Za-z0-9_.-]{1,128}",
+                             "stage": r"[A-Za-z0-9_-]{1,128}"}.items():
+            if not isinstance(api[key], str) or not re.fullmatch(pattern, api[key]):
+                raise ValueError(f"Invalid REST API {key}")
+        identity = (api["api_name"], api["stage"])
+        if identity in identities:
+            raise ValueError("REST API metric scopes must be unique")
+        identities.add(identity)
 
 
 class AWSCollector:
     def __init__(self, session, manifest, start, end):
         validate_manifest(manifest)
-        self.start, self.end = utc_time(start), utc_time(end)
+        self.start, self.end = utc_time(start).astimezone(timezone.utc), utc_time(end).astimezone(timezone.utc)
         if not 0 < (self.end - self.start).total_seconds() <= 3600:
             raise ValueError("Collection window must be positive and at most one hour")
         if self.end > datetime.now(timezone.utc):
             raise ValueError("Collection window cannot end in the future")
+        if manifest.get("rest_apis") and any(d.second or d.microsecond for d in (self.start, self.end)):
+            raise ValueError("API collection requires minute-aligned UTC start/end boundaries")
         self.manifest = manifest
         self.session = session
         self.evidence = []
@@ -51,7 +72,7 @@ class AWSCollector:
 
     def call(self, service, operation, **kwargs):
         self.calls += 1
-        if self.calls > 50:
+        if self.calls > 75:
             raise RuntimeError("Collection call budget exhausted")
         if service not in self.clients:
             from botocore.config import Config
@@ -63,91 +84,98 @@ class AWSCollector:
         return getattr(self.clients[service], operation)(**kwargs)
 
     def add(self, kind, resource, source, data, status="observed"):
+        region = self.manifest["region"]
+        url = None
+        if source.startswith("lambda:"):
+            url = f"https://console.aws.amazon.com/lambda/home?region={region}#/functions/{quote(resource, safe='')}"
+        elif source.startswith("logs:"):
+            url = f"https://console.aws.amazon.com/cloudwatch/home?region={region}#logsV2:log-groups"
+        elif source.startswith("cloudwatch:"):
+            url = f"https://console.aws.amazon.com/cloudwatch/home?region={region}#metricsV2:"
         self.evidence.append(Evidence(
             f"E{len(self.evidence) + 1:03}", kind, resource, source, status, data,
-            datetime.now(timezone.utc).isoformat(),
+            datetime.now(timezone.utc).isoformat(), source_url=url,
         ))
+
+    @staticmethod
+    def error_code(error):
+        code = getattr(error, "response", {}).get("Error", {}).get("Code", type(error).__name__)
+        return code if isinstance(code, str) and re.fullmatch(r"[A-Za-z0-9_.-]{1,80}", code) else "UnknownError"
 
     def attempt(self, kind, resource, source, action):
         try:
             action()
         except Exception as error:
             # SDK messages may embed sensitive request data. Retain only codes.
-            code = getattr(error, "response", {}).get("Error", {}).get("Code", type(error).__name__)
+            code = self.error_code(error)
             self.add(kind, resource, source, {"reason": f"Collection failed ({code}); the resource's health is unknown."}, "unavailable")
 
     def metrics(self, function):
-        data = {}
+        data, failures, successes = {}, [], 0
         for metric in ("Errors", "Invocations", "Throttles"):
-            response = self.call("cloudwatch", "get_metric_statistics", Namespace="AWS/Lambda",
-                                 MetricName=metric, Dimensions=[{"Name": "FunctionName", "Value": function}],
-                                 StartTime=self.start, EndTime=self.end, Period=60, Statistics=["Sum"])
-            points = response.get("Datapoints", [])
-            data[metric] = sum(p["Sum"] for p in points) if points else None
-        self.add("lambda_metrics", function, "cloudwatch:GetMetricStatistics", data)
+            try:
+                response = self.call("cloudwatch", "get_metric_statistics", Namespace="AWS/Lambda",
+                                     MetricName=metric, Dimensions=[{"Name": "FunctionName", "Value": function}],
+                                     StartTime=self.start, EndTime=self.end, Period=60, Statistics=["Sum"])
+                points = response.get("Datapoints", [])
+                data[metric] = sum(p["Sum"] for p in points) if points else None
+                successes += 1
+            except Exception as error:
+                data[metric] = None
+                failures.append(f"{metric}: {self.error_code(error)}")
+        if failures:
+            data["reason"] = "Some metrics could not be read: " + ", ".join(failures)
+        self.add("lambda_metrics", function, "cloudwatch:GetMetricStatistics", data,
+                 "partial" if failures and successes else "unavailable" if failures else "observed")
 
     def logs(self, group):
-        counts = {"access_denied": 0, "timeout": 0, "exception": 0, "resource_missing": 0}
-        patterns = {"access_denied": re.compile(r"AccessDenied(?:Exception)?|not authorized to perform", re.I),
-                    "timeout": re.compile(r"timed?\s*out|ETIMEDOUT|TimeoutError", re.I),
-                    "resource_missing": re.compile(r"ResourceNotFoundException"),
-                    "exception": re.compile(r"Traceback \(most recent call last\)|Unhandled\s+exception", re.I)}
-        token, seen, sampled = None, set(), []
+        counts = {name: 0 for name in ("access_denied", "timeout", "exception", "resource_missing", "unverified_mentions")}
+        token, seen, sampled, pages = None, set(), [], 0
+        reason, status = "", "observed"
         for _ in range(3):
             args = dict(logGroupName=group, startTime=int(self.start.timestamp() * 1000),
-                        endTime=int(self.end.timestamp() * 1000), limit=100)
+                        endTime=int(self.end.timestamp() * 1000), limit=100,
+                        filterPattern='?ERROR ?Error ?error ?Exception ?exception ?Traceback ?timeout ?ETIMEDOUT ?denied ?dependency_failure ?application_exception ?AccessDenied ?AccessDeniedException ?ResourceNotFoundException ?TimeoutError')
             if token:
                 args["nextToken"] = token
-            response = self.call("logs", "filter_log_events", **args)
+            try:
+                response = self.call("logs", "filter_log_events", **args)
+            except Exception as error:
+                status = "partial" if pages else "unavailable"
+                code = self.error_code(error)
+                reason = f"Log retrieval stopped ({code}); earlier observations are retained; remaining events are unknown."
+                break
+            pages += 1
             for event in response.get("events", []):
                 identity = event.get("eventId")
                 if identity and identity in seen:
                     continue
                 if identity:
                     seen.add(identity)
-                message = event.get("message", "")
-                # Recognize the lab's structured application errors without
-                # preserving arbitrary message text or trusting it as an instruction.
-                try:
-                    structured = json.loads(message[message.index("{"):])
-                except (ValueError, TypeError):
-                    structured = {}
-                if isinstance(structured, dict) and structured.get("event") == "application_exception":
-                    counts["exception"] += 1
+                signals, details, mention = classify(event.get("message", ""))
+                counts["unverified_mentions"] += int(mention)
+                for name in sorted(signals):
+                    counts[name] += 1
                     if len(sampled) < 20:
-                        sampled.append({"signal": "exception", "event_id": identity,
+                        sampled.append({"signal": name, "event_id": identity,
                                         "timestamp": event.get("timestamp"),
-                                        "stream": event.get("logStreamName")})
-                for name, pattern in patterns.items():
-                    if pattern.search(message):
-                        counts[name] += 1
-                        if len(sampled) < 20:
-                            sample = {"signal": name, "event_id": identity,
-                                      "timestamp": event.get("timestamp"),
-                                      "stream": event.get("logStreamName")}
-                            if isinstance(structured, dict):
-                                for field, pattern in {
-                                    "request_id": r"[A-Za-z0-9-]{1,64}",
-                                    "target": r"[A-Za-z0-9_.-]{3,255}",
-                                    "operation": r"PutItem",
-                                    "error_code": r"[A-Za-z]{1,64}",
-                                }.items():
-                                    value = structured.get(field)
-                                    if isinstance(value, str) and re.fullmatch(pattern, value):
-                                        sample[field] = value
-                            sampled.append(sample)
+                                        "stream": event.get("logStreamName"), **details})
             next_token = response.get("nextToken")
             if next_token and next_token == token:
-                self.add("log_signals", group, "logs:FilterLogEvents",
-                         {**counts, "samples": sampled, "reason": "Pagination stalled; log evidence is incomplete."}, "partial")
-                return
+                reason, status = "Pagination stalled; log evidence is incomplete.", "partial"
+                break
             token = next_token
             if not token:
                 break
-        self.add("log_signals", group, "logs:FilterLogEvents",
-                 {**counts, "samples": sampled,
-                  "reason": "Three-page log budget reached; this is a sample, not a complete error count." if token else ""},
-                 "partial" if token else "observed")
+        else:
+            if token:
+                reason, status = "Three-page log budget reached; sample is incomplete.", "partial"
+        data = {**counts, "samples": sampled, "pages_collected": pages,
+                "selection": "bounded error-keyword query; other log formats may be missed", "reason": reason}
+        function = group.removeprefix("/aws/lambda/")
+        if group.startswith("/aws/lambda/") and function in self.manifest.get("lambda_functions", []):
+            data["function_name"] = function
+        self.add("log_signals", group, "logs:FilterLogEvents", data, status)
 
     def function_configuration(self, function):
         response = self.call("lambda", "get_function_configuration", FunctionName=function)
@@ -192,6 +220,8 @@ class AWSCollector:
             raise ValueError("Authenticated AWS account does not match the manifest; collection stopped")
         self.add("collector_identity", self.manifest["account_id"], "sts:GetCallerIdentity",
                  {"account_id": identity["Account"], "region": self.manifest["region"]})
+        for api in self.manifest.get("rest_apis", []):
+            collect_api_metrics(self, api)
         for function in self.manifest.get("lambda_functions", []):
             self.attempt("lambda_metrics", function, "cloudwatch:GetMetricStatistics", lambda f=function: self.metrics(f))
             self.attempt("lambda_configuration", function, "lambda:GetFunctionConfiguration",

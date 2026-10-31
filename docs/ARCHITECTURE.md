@@ -29,4 +29,6 @@ Network configuration collection exists in this milestone; automated network dia
 
 Bundles have `schema_version`, `application`, `start`, `end`, and `evidence`. Each evidence item has a unique ID, kind, resource, source operation, collection timestamp, status, and data. Statuses are `observed`, `partial`, `unavailable`, or `not_collected`. An observed API response confirms collection, not service health.
 
+Evidence may include an optional HTTPS AWS console `source_url`. Kind-specific validation rejects invalid numeric and metadata fields. Reports include curated evidence references, not arbitrary imported data. API observations distinguish incident and baseline windows; configuration remains a current snapshot. Source pointers are service entry points rather than immutable event links.
+
 Future model responses must be schema validated, may cite only collected evidence IDs, and must include supporting and contradicting evidence plus unresolved checks. Numerical confidence scores will not be used without calibration.
