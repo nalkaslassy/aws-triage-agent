@@ -1,0 +1,47 @@
+{
+  "manifest": {
+    "application": "evaluation-checkout",
+    "account_id": "111122223333",
+    "region": "us-east-1",
+    "lambda_functions": [
+      "checkout"
+    ],
+    "log_groups": [
+      "/aws/lambda/checkout"
+    ],
+    "expected_tables": {
+      "checkout": "purchase-records"
+    }
+  },
+  "bundle": {
+    "schema_version": 1,
+    "application": "evaluation-checkout",
+    "start": "2026-10-30T12:00:00Z",
+    "end": "2026-10-30T12:15:00Z",
+    "evidence": []
+  },
+  "function": "checkout",
+  "symptom": "Some users report failures shortly after a deployment.",
+  "followups": {
+    "changes": [
+      {
+        "id": "E001",
+        "kind": "change_history",
+        "resource": "checkout",
+        "source": "curated synthetic development case",
+        "status": "observed",
+        "data": {
+          "events": [
+            {
+              "EventId": "change-r12",
+              "EventName": "UpdateFunctionCode",
+              "EventSource": "lambda.amazonaws.com",
+              "EventTime": "2026-10-30T12:02:00Z"
+            }
+          ]
+        },
+        "collected_at": "2026-10-30T12:15:00Z"
+      }
+    ]
+  }
+}

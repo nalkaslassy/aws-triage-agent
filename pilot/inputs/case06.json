@@ -1,0 +1,41 @@
+{
+  "manifest": {
+    "application": "evaluation-checkout",
+    "account_id": "111122223333",
+    "region": "us-east-1",
+    "lambda_functions": [
+      "checkout"
+    ],
+    "log_groups": [
+      "/aws/lambda/checkout"
+    ],
+    "expected_tables": {
+      "checkout": "purchase-records"
+    }
+  },
+  "bundle": {
+    "schema_version": 1,
+    "application": "evaluation-checkout",
+    "start": "2026-10-30T12:00:00Z",
+    "end": "2026-10-30T12:15:00Z",
+    "evidence": []
+  },
+  "function": "checkout",
+  "symptom": "Purchases fail after a configuration edit.",
+  "followups": {
+    "configuration": [
+      {
+        "id": "E001",
+        "kind": "lambda_configuration",
+        "resource": "checkout",
+        "source": "curated synthetic development case",
+        "status": "observed",
+        "data": {
+          "orders_table": "purchase-records-missing",
+          "expected_table": "purchase-records"
+        },
+        "collected_at": "2026-10-30T12:15:00Z"
+      }
+    ]
+  }
+}

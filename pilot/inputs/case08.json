@@ -1,0 +1,54 @@
+{
+  "manifest": {
+    "application": "evaluation-checkout",
+    "account_id": "111122223333",
+    "region": "us-east-1",
+    "lambda_functions": [
+      "checkout"
+    ],
+    "log_groups": [
+      "/aws/lambda/checkout"
+    ],
+    "expected_tables": {
+      "checkout": "purchase-records"
+    }
+  },
+  "bundle": {
+    "schema_version": 1,
+    "application": "evaluation-checkout",
+    "start": "2026-10-30T12:00:00Z",
+    "end": "2026-10-30T12:15:00Z",
+    "evidence": [
+      {
+        "id": "E001",
+        "kind": "lambda_metrics",
+        "resource": "checkout",
+        "source": "curated synthetic development case",
+        "status": "observed",
+        "data": {
+          "Throttles": 5,
+          "Invocations": 0,
+          "Errors": 0
+        },
+        "collected_at": "2026-10-30T12:15:00Z"
+      }
+    ]
+  },
+  "function": "checkout",
+  "symptom": "Requests fail and the application logs are empty.",
+  "followups": {
+    "configuration": [
+      {
+        "id": "E001",
+        "kind": "lambda_concurrency",
+        "resource": "checkout",
+        "source": "curated synthetic development case",
+        "status": "observed",
+        "data": {
+          "reserved_concurrency": 0
+        },
+        "collected_at": "2026-10-30T12:15:00Z"
+      }
+    ]
+  }
+}

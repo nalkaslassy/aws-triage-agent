@@ -25,6 +25,9 @@ jobs:
       - run: python sandbox/evaluate_model.py --out reports/model-preflight.json
         env:
           PYTHONPATH: src
+      - run: python sandbox/run_pilot.py --limit 12 --repeat 3 --out reports/pilot-preflight
+        env:
+          PYTHONPATH: src
   aws-contracts:
     runs-on: ubuntu-latest
     steps:

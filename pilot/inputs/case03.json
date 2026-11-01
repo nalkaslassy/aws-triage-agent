@@ -1,0 +1,68 @@
+{
+  "manifest": {
+    "application": "evaluation-checkout",
+    "account_id": "111122223333",
+    "region": "us-east-1",
+    "lambda_functions": [
+      "checkout"
+    ],
+    "log_groups": [
+      "/aws/lambda/checkout"
+    ],
+    "expected_tables": {
+      "checkout": "purchase-records"
+    }
+  },
+  "bundle": {
+    "schema_version": 1,
+    "application": "evaluation-checkout",
+    "start": "2026-10-30T12:00:00Z",
+    "end": "2026-10-30T12:15:00Z",
+    "evidence": [
+      {
+        "id": "E001",
+        "kind": "log_signals",
+        "resource": "/aws/lambda/checkout",
+        "source": "curated synthetic observation",
+        "status": "observed",
+        "data": {
+          "access_denied": 1,
+          "function_name": "checkout",
+          "samples": [
+            {
+              "signal": "access_denied",
+              "event_id": "event-r03",
+              "request_id": "request-r03",
+              "operation": "PutItem",
+              "target": "purchase-records",
+              "timestamp": 1793361600000,
+              "trace_id": "1-690344c0-333333333333333333333333"
+            }
+          ]
+        },
+        "collected_at": "2026-10-30T12:15:00Z"
+      }
+    ]
+  },
+  "function": "checkout",
+  "symptom": "Purchase failures are reported despite a current allow in the simulated execution role.",
+  "followups": {
+    "permissions": [
+      {
+        "id": "Replay",
+        "kind": "permission_simulation",
+        "resource": "checkout",
+        "source": "curated synthetic observation",
+        "status": "observed",
+        "data": {
+          "role": "arn:aws:iam::111122223333:role/checkout-execution",
+          "action": "dynamodb:PutItem",
+          "target": "arn:aws:dynamodb:us-east-1:111122223333:table/purchase-records",
+          "decision": "allowed",
+          "missing_context": []
+        },
+        "collected_at": "2026-10-30T12:15:00Z"
+      }
+    ]
+  }
+}

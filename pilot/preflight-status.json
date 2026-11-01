@@ -1,0 +1,23 @@
+{
+  "validation": "input validation and local deterministic baselines completed",
+  "cases": 12,
+  "planned_model_investigations": 72,
+  "maximum_planning_calls": 432,
+  "actual_model_calls": 0,
+  "model_quality": "not measured",
+  "live_aws_validation": "not run",
+  "input_hashes": {
+    "case01": "8d4381f5be255ff250e2a5e5fa5c007377f5ed19d652154cfbe8e17a9ad7d19b",
+    "case02": "52afdd65b4aacc10fd66d03ab80c03305abb396c49f1a724b2731f7d16857d69",
+    "case03": "a0c5ab77c1012ac43ad3a87ff8b83130afa51c142f1a1fa5418f77455e707c2a",
+    "case04": "7eedacca9d02cd07e52cd8afbee93263ffbe89bb7985349bdc8b0b1e91f9ca38",
+    "case05": "48a8c218c4f5dc6b96d96298e787d1d75aaba6c67b2ee05ff1e44e2d965a736c",
+    "case06": "44adcea6ba34b3a448f4acd4b4424b6627e5f583e547e08382f56bcbbc50db7f",
+    "case07": "16056553fa737c4aab1ee139f7c89ab2ea823f3c7d430bb9900b248a56c4d922",
+    "case08": "54fc1337e0016f7f754e355eb47ec594c96c333fef79de4d90ec47d29e70cead",
+    "case09": "e605229064c45c18f49556d81cfe889bab570944831f98d0fcc6a03aace09225",
+    "case10": "9ffbea60fcc8d80f4edb4db4c236deaa6358fd52d55f100c7c05f8de6d544952",
+    "case11": "e0584094be27032bbdf0d1104845b7adff49c63908d76100b93c64c79dc83088",
+    "case12": "05067f785a526af9d3d1eeb7440727e21515524ee5abf3c67eb83e1f13b8d6c3"
+  }
+}

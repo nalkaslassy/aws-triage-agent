@@ -1,0 +1,47 @@
+{
+  "manifest": {
+    "application": "evaluation-checkout",
+    "account_id": "111122223333",
+    "region": "us-east-1",
+    "lambda_functions": [
+      "checkout"
+    ],
+    "log_groups": [
+      "/aws/lambda/checkout"
+    ],
+    "expected_tables": {
+      "checkout": "purchase-records"
+    }
+  },
+  "bundle": {
+    "schema_version": 1,
+    "application": "evaluation-checkout",
+    "start": "2026-10-30T12:00:00Z",
+    "end": "2026-10-30T12:15:00Z",
+    "evidence": [
+      {
+        "id": "E001",
+        "kind": "log_signals",
+        "resource": "/aws/lambda/checkout",
+        "source": "curated synthetic development case",
+        "status": "observed",
+        "data": {
+          "timeout": 2,
+          "function_name": "checkout",
+          "samples": [
+            {
+              "signal": "timeout",
+              "event_id": "timeout-r11",
+              "request_id": "request-r11",
+              "timestamp": 1793361600000
+            }
+          ]
+        },
+        "collected_at": "2026-10-30T12:15:00Z"
+      }
+    ]
+  },
+  "function": "checkout",
+  "symptom": "Purchases hang during dependency calls.",
+  "followups": {}
+}

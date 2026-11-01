@@ -95,6 +95,10 @@ AWS already offers incident investigation through DevOps Agent and CloudWatch in
 
 No open-source license has been selected yet. Keep the repository private while the prototype is being developed.
 
+## Development pilot
+
+The [12-case pilot package](pilot/README.md) includes paired basic/constrained model arms, deterministic coverage references, bounded resumable runs, and arm-blinded human review exports. Preflight makes no model calls. Actual inference, live AWS collection, independent review, and research novelty assessment remain pending.
+
 ## Next step: live sandbox validation
 
 The sandbox deployment code and local scenario checks are available. No AWS resources have been deployed and live diagnosis remains unverified. Start with [the sandbox guide](sandbox/README.md): validate/build the template, review the deployment in your sandbox account, send a normal request, and collect its evidence before injecting a fault.

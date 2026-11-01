@@ -1,0 +1,54 @@
+{
+  "manifest": {
+    "application": "evaluation-checkout",
+    "account_id": "111122223333",
+    "region": "us-east-1",
+    "lambda_functions": [
+      "checkout"
+    ],
+    "log_groups": [
+      "/aws/lambda/checkout"
+    ],
+    "expected_tables": {
+      "checkout": "purchase-records"
+    }
+  },
+  "bundle": {
+    "schema_version": 1,
+    "application": "evaluation-checkout",
+    "start": "2026-10-30T12:00:00Z",
+    "end": "2026-10-30T12:15:00Z",
+    "evidence": [
+      {
+        "id": "E001",
+        "kind": "log_signals",
+        "resource": "/aws/lambda/checkout",
+        "source": "curated synthetic development case",
+        "status": "unavailable",
+        "data": {
+          "reason": "Log access denied",
+          "error_code": "AccessDeniedException"
+        },
+        "collected_at": "2026-10-30T12:15:00Z"
+      }
+    ]
+  },
+  "function": "checkout",
+  "symptom": "A few remote users cannot connect; application logs cannot be read.",
+  "followups": {
+    "logs": [
+      {
+        "id": "E001",
+        "kind": "log_signals",
+        "resource": "/aws/lambda/checkout",
+        "source": "curated synthetic development case",
+        "status": "unavailable",
+        "data": {
+          "reason": "Log access denied",
+          "error_code": "AccessDeniedException"
+        },
+        "collected_at": "2026-10-30T12:15:00Z"
+      }
+    ]
+  }
+}
