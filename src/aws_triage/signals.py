@@ -47,7 +47,8 @@ def classify(message):
             signals.add("exception")
     details = {}
     for field, pattern in {"request_id": r"[A-Za-z0-9-]{1,64}", "target": r"[A-Za-z0-9_.-]{3,255}",
-                           "operation": r"PutItem", "error_code": r"[A-Za-z]{1,64}"}.items():
+                           "operation": r"PutItem", "error_code": r"[A-Za-z]{1,64}",
+                           "trace_id": r"1-[0-9a-f]{8}-[0-9a-f]{24}"}.items():
         value = structured.get(field)
         if isinstance(value, str) and re.fullmatch(pattern, value):
             details[field] = value

@@ -112,7 +112,7 @@ class AWSCollector:
         except Exception as error:
             # SDK messages may embed sensitive request data. Retain only codes.
             code = self.error_code(error)
-            self.add(kind, resource, source, {"reason": f"Collection failed ({code}); the resource's health is unknown."}, "unavailable")
+            self.add(kind, resource, source, {"reason": f"Collection failed ({code}); the resource's health is unknown.", "error_code": code}, "unavailable")
 
     def metrics(self, function):
         data, failures, successes = {}, [], 0
@@ -135,7 +135,7 @@ class AWSCollector:
     def logs(self, group):
         counts = {name: 0 for name in ("access_denied", "timeout", "exception", "resource_missing", "unverified_mentions")}
         token, seen, sampled, pages = None, set(), [], 0
-        reason, status = "", "observed"
+        reason, status, error_code = "", "observed", None
         for _ in range(3):
             args = dict(logGroupName=group, startTime=int(self.start.timestamp() * 1000),
                         endTime=int(self.end.timestamp() * 1000), limit=100,
@@ -147,6 +147,7 @@ class AWSCollector:
             except Exception as error:
                 status = "partial" if pages else "unavailable"
                 code = self.error_code(error)
+                error_code = code
                 reason = f"Log retrieval stopped ({code}); earlier observations are retained; remaining events are unknown."
                 break
             pages += 1
@@ -176,6 +177,8 @@ class AWSCollector:
                 reason, status = "Three-page log budget reached; sample is incomplete.", "partial"
         data = {**counts, "samples": sampled, "pages_collected": pages,
                 "selection": "bounded error-keyword query; other log formats may be missed", "reason": reason}
+        if error_code:
+            data["error_code"] = error_code
         function = group.removeprefix("/aws/lambda/")
         if group.startswith("/aws/lambda/") and function in self.manifest.get("lambda_functions", []):
             data["function_name"] = function

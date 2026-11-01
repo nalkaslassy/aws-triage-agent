@@ -119,3 +119,7 @@ When finished, run `sam delete --stack-name triage-sandbox-orders --region us-ea
 Deploy and exercise the real AWS cases, verify logged request IDs and HTTP outcomes, gather incident windows, record delayed/partial telemetry, and compare findings against ground truth. Scoped IAM policy inspection, deployment history correlation, trace retrieval, and live performance measurements are still pending.
 
 References: [SAM build](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/using-sam-cli-build.html), [SAM validation](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-cli-command-reference-sam-validate.html), [API authentication](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-property-api-apiauth.html), [Lambda reserved concurrency](https://docs.aws.amazon.com/lambda/latest/dg/configuration-concurrency.html).
+
+## Request correlation metadata
+
+The handler retains a valid AWS root trace ID from `_X_AMZN_TRACE_ID` in structured logs, alongside request IDs. Other trace-header fields are discarded. This supports identifier correlation in reports; it does not collect X-Ray trace documents or instrument every downstream hop. No additional cloud permissions or resources are introduced by this change.

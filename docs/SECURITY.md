@@ -25,11 +25,12 @@ This table is an implementation inventory, not a deployable IAM policy. Do not a
 - At most 75 SDK operation attempts at the application layer; SDK retry configuration permits up to two HTTP attempts per operation. Optional API collection adds a preceding equal-length baseline.
 - At most three filtered log pages of up to 100 candidate events each per group; pagination gaps are disclosed and partial evidence is retained.
 - VPN snapshots collect one page of up to 100 records and disclose continuation.
+- Adaptive checks permit one extra attempt only for recognized transient read error codes, within existing step/time/75-operation budgets; SDK HTTP retry limits still apply. Access denials and scope/deadline failures are terminal.
 - API timeouts are bounded; there is not yet a global wall-clock cancellation mechanism.
 
 ## Data handling
 
-Raw log messages are processed in memory and are not stored in generated bundles. Event IDs and network/resource identifiers can still be sensitive. Files are created with mode `0600` and refuse overwrite; parent-directory and backup security remain the operator's responsibility. Git ignores `evidence/`, `reports/`, local manifests, credential-like files, and environment files. File permissions do not substitute for access controls on a shared computer.
+Raw log messages are processed in memory and are not stored in generated bundles. Request IDs, valid AWS root trace IDs, event IDs, and network/resource identifiers can still be sensitive. Files are created with mode `0600` and refuse overwrite; parent-directory and backup security remain the operator's responsibility. Git ignores `evidence/`, `reports/`, local manifests, credential-like files, and environment files. File permissions do not substitute for access controls on a shared computer.
 
 Never commit real telemetry or credentials. Use existing short-lived credential profiles when collecting. Secrets Manager, SSM decryption, arbitrary S3 reads, resource modification, arbitrary shell commands, and application request execution are not part of the collector.
 

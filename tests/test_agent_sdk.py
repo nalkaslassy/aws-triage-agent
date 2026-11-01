@@ -83,6 +83,19 @@ class FollowupSDKTests(unittest.TestCase):
         self.assertEqual(evidence[1].status, "unavailable")
         self.assertNotIn("PRIVATE_ERROR", str(evidence))
 
+    def test_transient_sdk_code_is_preserved_for_retry_classification(self):
+        from aws_triage.check_outcomes import check_outcome, retryable
+        self.identity()
+        self.configuration()
+        self.stubs["lambda"].add_client_error("get_function_concurrency", service_error_code="ThrottlingException",
+                                               service_message="PRIVATE_ERROR", expected_params={"FunctionName": "orders"})
+        backend = AWSFollowups(self.session, self.manifest, self.bundle, "orders")
+        evidence = backend.run("configuration")
+        self.assertEqual(check_outcome(evidence), "partial")
+        self.assertTrue(retryable(evidence))
+        self.assertEqual(evidence[-1].data["error_code"], "ThrottlingException")
+        self.assertNotIn("PRIVATE_ERROR", str(evidence))
+
     def test_change_lookup_discards_sensitive_event_body_and_read_events(self):
         self.identity()
         self.stubs["cloudtrail"].add_response("lookup_events", {"Events": [

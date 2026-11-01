@@ -3,12 +3,21 @@
 import json
 import logging
 import os
+import re
 import time
 import uuid
 
 LOG = logging.getLogger("triage_sandbox")
 LOG.setLevel(logging.INFO)
 _client = None
+
+
+def emit(level, fields):
+    header = os.environ.get("_X_AMZN_TRACE_ID", "")
+    match = re.search(r"(?:^|;)Root=(1-[0-9a-f]{8}-[0-9a-f]{24})(?:;|$)", header)
+    if match:
+        fields = {**fields, "trace_id": match.group(1)}
+    LOG.log(level, json.dumps(fields))
 
 
 def dynamodb():
@@ -53,13 +62,13 @@ def handler(event, context):
         except Exception as error:
             code = getattr(error, "response", {}).get("Error", {}).get("Code", type(error).__name__)
             # Exclude the request body, credentials, and SDK error text.
-            LOG.error(json.dumps({"event": "dependency_failure", "request_id": request_id,
+            emit(logging.ERROR, {"event": "dependency_failure", "request_id": request_id,
                                   "dependency": "dynamodb", "operation": "PutItem",
-                                  "target": table, "error_code": code}))
+                                  "target": table, "error_code": code})
             return response(502, {"error": "Order storage unavailable", "request_id": request_id})
-        LOG.info(json.dumps({"event": "order_created", "request_id": request_id}))
+        emit(logging.INFO, {"event": "order_created", "request_id": request_id})
         return response(201, {"order_id": order_id, "request_id": request_id})
     except Exception as error:
-        LOG.error(json.dumps({"event": "application_exception", "request_id": request_id,
-                              "error_code": type(error).__name__}))
+        emit(logging.ERROR, {"event": "application_exception", "request_id": request_id,
+                              "error_code": type(error).__name__})
         return response(500, {"error": "Order creation failed", "request_id": request_id})

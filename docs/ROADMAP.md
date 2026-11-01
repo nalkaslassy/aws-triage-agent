@@ -45,3 +45,7 @@ Acceptance: compare against deterministic triage and existing investigation opti
 ## Later
 
 Ticket/channel integration, application onboarding, multi-account support, and additional stacks after the initial workflow works. Human-reviewed recommendations remain the default; production auto-remediation is not part of these milestones.
+
+## Latest quality improvements (implemented locally)
+
+Authorization candidates now require an incident-time failed request/action/target, with matching simulation references. Check journals expose collection outcomes and bounded transient retries. Focused handoffs group request and root trace identifiers. Five independent model input packets and separate rubrics are available with no-inference preflight. All remain local/recorded validation; live AWS testing, actual model comparison, full trace retrieval, Datadog, and deeper connectivity investigation remain pending.

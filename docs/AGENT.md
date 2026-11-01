@@ -52,16 +52,16 @@ CloudTrail retains event ID/name/source/time for non-read events only. Full even
 
 ## Budgets and validation
 
-- Six steps by default; configurable from one to ten, including the final decision. Each named check executes at most once. Repeat proposals use cached evidence.
+- Six steps by default; configurable from one to ten, including the final decision. Each named check normally executes once. A check with explicit recognized transient read errors can execute one additional time within the same step/time/SDK budgets. Access denials, scope failures, unknown errors, and deadline failures do not qualify. Other repeat proposals use cached evidence.
 - Context is capped at 24,000 serialized characters per model turn; output at 1,024 tokens. Returned token usage is recorded without inferring monetary cost.
 - Default cooperative deadline: sixty seconds, configurable from one to 120. Checks occur before/after planning and before AWS calls. In-flight calls can finish after the deadline: SDK reads use ten-second read timeouts; inference uses twenty seconds and one attempt.
 - The collector retains its 75-operation budget and bounded retries. Authenticated account identity is verified before application reads. The model has no direct SDK access.
 - Final references must exist in scoped, available evidence. Supporting and contradicting IDs must not overlap. Each candidate needs a qualifying observation category.
-- Log candidates require a matching sampled event inside the incident window. A nearby change alone cannot support an authorization candidate. Simulation denies with missing context do not qualify on their own.
+- Log candidates require a matching sampled event inside the incident window. A nearby change alone cannot support an authorization candidate. Authorization candidates require an in-window failed request with a request ID, PutItem operation, and table target. Every cited simulation must match that request action and target. A simulation alone is a configuration observation, even when it denies access without missing context.
 - Category/reference validation does not establish semantic causality. Counterevidence selection and ranking still need evaluation. There are no calibrated confidence scores or confirmed root-cause claims.
 - Invalid decisions, unavailable planning, deadlines, or exhausted budgets stop the adaptive assessment while preserving deterministic findings and useful handoffs. Partial reads survive.
 
-The journal records executed/cached checks, evidence IDs, and safe rejection/error codes. It excludes raw provider errors and model private reasoning.
+The journal distinguishes successful, partial, unavailable, no-evidence, and cached outcomes. It records attempts, retry eligibility, evidence IDs, and safe rejection/error codes. A completed call does not imply successful collection. Earlier evidence is preserved across retries. It excludes raw provider errors and model private reasoning.
 
 ## Existing-profile permissions
 
@@ -80,3 +80,9 @@ Run the real selected model and deterministic baseline against the same recorded
 Then exercise the live sandbox faults and verify actual principal/action/resource, responses, telemetry delay, and collection coverage. Broader network diagnosis, Datadog alert ingestion, resource-policy inspection, and full deployment-history correlation remain pending.
 
 References: [Bedrock tool calling](https://docs.aws.amazon.com/bedrock/latest/userguide/tool-use-client-side.html), [IAM simulation](https://docs.aws.amazon.com/IAM/latest/APIReference/API_SimulatePrincipalPolicy.html), [CloudTrail lookup](https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_LookupEvents.html).
+
+## Incident handoff and evaluation inputs
+
+JSON and Markdown reports include a focused incident summary: leading candidate, exact request/action/target when available, latest incomplete checks, and a suggested owner verification. Request IDs group related samples; valid AWS root trace IDs are retained as identifiers. This does not retrieve X-Ray traces or prove a complete request path. Current-role simulation does not identify the actual historical caller.
+
+The separate [model evaluation guide](../evaluation/README.md) describes five recorded synthetic input packets, private expected-answer rubrics, a no-inference preflight, and explicitly enabled paid Bedrock runs. No actual model quality results have been recorded.

@@ -1,0 +1,13 @@
+{
+  "model_evaluation": "not_run",
+  "model_calls": 0,
+  "cases_validated": 5,
+  "input_hashes": {
+    "case01": "8d4381f5be255ff250e2a5e5fa5c007377f5ed19d652154cfbe8e17a9ad7d19b",
+    "case02": "52afdd65b4aacc10fd66d03ab80c03305abb396c49f1a724b2731f7d16857d69",
+    "case03": "a0c5ab77c1012ac43ad3a87ff8b83130afa51c142f1a1fa5418f77455e707c2a",
+    "case04": "7eedacca9d02cd07e52cd8afbee93263ffbe89bb7985349bdc8b0b1e91f9ca38",
+    "case05": "48a8c218c4f5dc6b96d96298e787d1d75aaba6c67b2ee05ff1e44e2d965a736c"
+  },
+  "note": "Preflight only. No model quality score or live AWS validation is available."
+}

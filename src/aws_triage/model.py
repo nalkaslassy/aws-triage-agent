@@ -52,6 +52,12 @@ class Evidence:
             raise ValueError("Evidence data must be an object")
         if "reason" in self.data and (not isinstance(self.data["reason"], str) or len(self.data["reason"]) > 4096):
             raise ValueError("Evidence reason must be text")
+        if "error_code" in self.data and (not isinstance(self.data["error_code"], str) or not re.fullmatch(r"[A-Za-z0-9_.-]{1,80}", self.data["error_code"])):
+            raise ValueError("Invalid collection error code")
+        if "error_codes" in self.data:
+            codes = self.data["error_codes"]
+            if not isinstance(codes, list) or len(codes) > 10 or any(not isinstance(c, str) or not re.fullmatch(r"[A-Za-z0-9_.-]{1,80}", c) for c in codes):
+                raise ValueError("Invalid collection error codes")
         if self.kind in {"lambda_metrics", "api_metrics"}:
             fields = ("Errors", "Invocations", "Throttles") if self.kind == "lambda_metrics" else (
                 "requests", "server_errors", "client_errors", "latency_ms", "integration_latency_ms")
@@ -101,6 +107,8 @@ class Evidence:
                 raise ValueError("Log samples must be at most twenty objects")
             for sample in samples:
                 number(sample.get("timestamp"), "sample timestamp", integer=True)
+                if "trace_id" in sample and (not isinstance(sample["trace_id"], str) or not re.fullmatch(r"1-[0-9a-f]{8}-[0-9a-f]{24}", sample["trace_id"])):
+                    raise ValueError("Invalid X-Ray root trace ID")
                 for key, value in sample.items():
                     if key != "timestamp" and (not isinstance(value, (str, type(None))) or isinstance(value, str) and len(value) > 1024):
                         raise ValueError("Log sample fields must be bounded text")

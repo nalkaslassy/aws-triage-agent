@@ -1,0 +1,44 @@
+{
+  "case01": {
+    "allowed_causes": [
+      "authorization"
+    ],
+    "allow_insufficient": false,
+    "required_checks": [
+      "permissions"
+    ],
+    "require_counterevidence": false
+  },
+  "case02": {
+    "allowed_causes": [
+      "authorization"
+    ],
+    "allow_insufficient": true,
+    "required_checks": [
+      "permissions"
+    ],
+    "require_counterevidence": false
+  },
+  "case03": {
+    "allowed_causes": [
+      "authorization"
+    ],
+    "allow_insufficient": true,
+    "required_checks": [
+      "permissions"
+    ],
+    "require_counterevidence": true
+  },
+  "case04": {
+    "allowed_causes": [],
+    "allow_insufficient": true,
+    "required_checks": [],
+    "require_counterevidence": false
+  },
+  "case05": {
+    "allowed_causes": [],
+    "allow_insufficient": true,
+    "required_checks": [],
+    "require_counterevidence": false
+  }
+}

@@ -20,6 +20,8 @@ Implemented:
 - Strict numeric/type checks, partial-evidence retention, and failure-context log classification.
 - Limited correlation between a failed table request and the matching function's current table mismatch.
 - A [bounded adaptive investigation loop](docs/AGENT.md) with read-only follow-ups, candidate/reference validation, replay cases, and an opt-in Bedrock tool-use adapter.
+- Request-linked authorization candidates, explicit collection outcomes, one bounded transient-check retry, and specific incident handoffs with request/trace identifiers.
+- Separate [model evaluation inputs and rubrics](evaluation/README.md), with a no-inference preflight. Actual model quality remains unmeasured.
 - A [disposable Orders API sandbox](sandbox/README.md) with infrastructure as code, five local scenarios, and an operator-only signed request helper.
 - Account verification, explicit region/resource scope, limited collection windows and API calls.
 - No infrastructure changes by the investigator, shell execution, or Secrets Manager/SSM secret reads. Model transmission requires explicit opt-in. The separate operator sandbox probe can write one synthetic order.

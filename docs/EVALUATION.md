@@ -18,3 +18,9 @@ Initial sandbox scenarios:
 | Healthy baseline | No supported failure established, with scope limits | Claim all users and dependencies are healthy |
 
 Record scenario ground truth separately from the investigator's input. Preserve time window, tool calls, source coverage, truncation, final claims, supporting evidence, and cost. Evaluate repeated runs after model integration. Track false root-cause claims and useful abstention alongside accuracy and time to first useful finding.
+
+## Independent model inputs
+
+The [recorded model suite](../evaluation/README.md) adds five synthetic input packets and a separate rubric. Input packets contain no scripted decisions or expected answers. The default evaluator only validates inputs and records hashes: zero inference calls and no quality score. Explicit paid Bedrock evaluation uses recorded follow-ups, compares against initial deterministic findings, and records bounded runtime metrics. Rubric passes are limited contract checks, not a general accuracy measure; causal claims and citations still need human review.
+
+Behavioral tests additionally cover request-bound authorization, mismatched simulations, incomplete collection outcomes, transient retry limits, trace identifier filtering, and evaluator input isolation.

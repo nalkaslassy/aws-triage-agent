@@ -93,6 +93,13 @@ def investigate(bundle: Bundle) -> Report:
             report.gaps.append(f"{item.id}: Current configuration snapshot; it does not establish historical incident-time configuration.")
         if item.kind == "permission_simulation":
             report.gaps.append(f"{item.id}: Current permission simulation; actual request/session context, resource policies, endpoint policies, and incident-time state may differ.")
+            if item.status in {"observed", "partial"} and item.data.get("decision"):
+                report.findings.append(Finding(
+                    "Current IAM simulation result observed", "confirmed_observation",
+                    "A current role/action/target simulation returned the decision listed in the evidence index. "
+                    "This is a configuration observation and does not, by itself, explain the reported incident.",
+                    [item.id], ["Match the simulated action and target to an actual failed request, then verify the real caller and incident-time policy context."],
+                    "IAM / application owner", item.resource))
         if item.kind == "change_history":
             report.gaps.append(f"{item.id}: Bounded regional function change lookup; no conclusion that a recent change caused the incident or that all IAM/deployment events were captured.")
     api_findings(bundle, report)
@@ -157,7 +164,7 @@ def evidence_reference(item):
     details = {key: item.data[key] for key in fields if key in item.data}
     if item.kind == "log_signals":
         for i, sample in enumerate(item.data.get("samples", []), 1):
-            parts = [f"{key}={sample[key]}" for key in ("signal", "event_id", "stream", "request_id", "operation", "target", "error_code")
+            parts = [f"{key}={sample[key]}" for key in ("signal", "event_id", "stream", "request_id", "trace_id", "operation", "target", "error_code")
                      if sample.get(key) is not None]
             if sample.get("timestamp") is not None:
                 try:

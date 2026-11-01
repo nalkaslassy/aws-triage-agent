@@ -11,6 +11,8 @@ from .investigate import evidence_reference, investigate
 from .model import Bundle, Evidence, Finding, text_field, utc_time
 from datetime import datetime, timezone
 from .planner import CAUSES, NEXT_STEPS
+from .incident import authorization_samples, simulation_matches, incident_summary, summary_markdown
+from .check_outcomes import check_outcome, retryable
 
 KINDS = {"lambda_metrics", "lambda_configuration", "lambda_concurrency", "log_signals", "api_metrics",
          "permission_simulation", "change_history", "followup_failure"}
@@ -36,13 +38,13 @@ def supports(cause, item, start, end):
         return False
     data = item.data
     if item.kind == "log_signals":
+        if cause == "authorization":
+            return bool(data.get("access_denied") and data["access_denied"] > 0 and authorization_samples(item, start, end))
         key = {"authorization": "access_denied", "application": "exception", "network": "timeout"}.get(cause)
         return bool(key and data.get(key) and data[key] > 0 and any(
             s.get("signal") == key and s.get("event_id") and s.get("timestamp") is not None
             and utc_time(start).timestamp() * 1000 <= s["timestamp"] < utc_time(end).timestamp() * 1000
             for s in data.get("samples", [])))
-    if cause == "authorization" and item.kind == "permission_simulation":
-        return item.status == "observed" and not data.get("missing_context") and data.get("decision") in {"explicitDeny", "implicitDeny"}
     if cause == "configuration" and item.kind == "lambda_configuration":
         return item.status == "observed" and bool(data.get("orders_table") and data.get("expected_table") and data["orders_table"] != data["expected_table"])
     if cause == "capacity":
@@ -83,6 +85,12 @@ def validate_decision(decision, evidence, start, end):
             raise ValueError("Evidence cannot both support and contradict a candidate")
         if not candidate["supporting"] or not any(supports(cause, by_id[r], start, end) for r in candidate["supporting"]):
             raise ValueError("Candidate lacks a qualifying observation")
+        if cause == "authorization":
+            samples = [s for ref in candidate["supporting"] for s in authorization_samples(by_id[ref], start, end)]
+            for ref in candidate["supporting"] + candidate["contradicting"]:
+                item = by_id[ref]
+                if item.kind == "permission_simulation" and not any(simulation_matches(item, sample) for sample in samples):
+                    raise ValueError("Simulation action/target does not match the cited failed request")
 
 
 def run_agent(bundle, manifest, function, symptom, planner, backend, max_steps=6, seconds=60):
@@ -95,6 +103,7 @@ def run_agent(bundle, manifest, function, symptom, planner, backend, max_steps=6
     # Copy imported mutable data before analysis; model output never mutates it.
     evidence = copy.deepcopy([e for e in bundle.evidence if in_scope(e, manifest, function)])
     journal, completed, serial, planner_turns = [], set(), 0, 0
+    attempts, retry_checks, outcomes = {}, set(), {}
     started = time.monotonic()
     finish, stop = None, "step_budget"
     for _ in range(max_steps):
@@ -105,6 +114,7 @@ def run_agent(bundle, manifest, function, symptom, planner, backend, max_steps=6
                  "start": bundle.start, "end": bundle.end,
                  "evidence": [evidence_reference(e) for e in evidence],
                  "completed_checks": sorted(completed), "journal": journal,
+                 "retryable_checks": sorted(retry_checks),
                  "remaining_steps": max_steps - len(journal)}
         try:
             planner_turns += 1
@@ -126,17 +136,23 @@ def run_agent(bundle, manifest, function, symptom, planner, backend, max_steps=6
             finish, stop = decision, "finished"
             break
         check = decision["check"]
-        if check in completed:
-            journal.append({"action": "check", "check": check, "status": "cached", "new_evidence_ids": []})
+        if check in completed and check not in retry_checks:
+            journal.append({"action": "check", "check": check, "status": "cached", "cached_outcome": outcomes[check], "new_evidence_ids": []})
             continue
         completed.add(check)
+        attempts[check] = attempts.get(check, 0) + 1
+        retry_checks.discard(check)
         try:
             additions = backend.run(check)
             if not isinstance(additions, list) or len(additions) > 20 or any(not isinstance(e, Evidence) or not in_scope(e, manifest, function) for e in additions):
                 raise ValueError("Backend returned out-of-scope evidence")
-        except Exception:
+        except Exception as error:
             additions = [Evidence("Failure", "followup_failure", function, check, "unavailable",
-                                  {"reason": "Follow-up could not be completed; no health conclusion is supported."}, datetime.now(timezone.utc).isoformat())]
+                                  {"reason": "Follow-up could not be completed; no health conclusion is supported.",
+                                   "error_code": AWSCollector.error_code(error)}, datetime.now(timezone.utc).isoformat())]
+        if len(evidence) + len(additions) > 1000:
+            stop = "evidence_budget"
+            break
         ids = []
         for item in additions:
             while True:
@@ -146,12 +162,18 @@ def run_agent(bundle, manifest, function, symptom, planner, backend, max_steps=6
                     break
             evidence.append(replace(item, id=identity))
             ids.append(identity)
-        journal.append({"action": "check", "check": check, "status": "completed" if additions else "no_evidence", "new_evidence_ids": ids})
+        outcome = check_outcome(additions)
+        outcomes[check] = outcome
+        if attempts[check] < 2 and retryable(additions):
+            retry_checks.add(check)
+        journal.append({"action": "check", "check": check, "status": outcome, "attempt": attempts[check],
+                        "retryable": check in retry_checks, "new_evidence_ids": ids})
     collected = Bundle(bundle.application, bundle.start, bundle.end, evidence)
     report = investigate(collected)
     report.mode = "bounded adaptive"
     candidates = finish["candidates"] if finish else []
     next_steps = finish["next_steps"] if finish else ["collect_missing"]
+    summary = incident_summary(collected, function, symptom, candidates, journal, [NEXT_STEPS[k] for k in next_steps])
     for rank, candidate in enumerate(candidates, 1):
         report.findings.append(Finding(
             f"Candidate {rank}: {TITLES[candidate['cause']]}", "hypothesis",
@@ -167,7 +189,9 @@ def run_agent(bundle, manifest, function, symptom, planner, backend, max_steps=6
             "assessment": {"status": "hypotheses" if candidates else "insufficient_evidence",
                            "candidates": candidates, "next_steps": [NEXT_STEPS[k] for k in next_steps]},
             "journal": journal, "model_usage": getattr(planner, "usage", None),
+            "summary": summary,
             "metrics": {"planner_turns": planner_turns, "executed_checks": len(completed),
+                        "check_attempts": sum(attempts.values()), "retry_attempts": sum(max(0, n - 1) for n in attempts.values()),
                         "sdk_operations": backend.collector.calls if hasattr(backend, "collector") else None,
                         "elapsed_seconds": round(time.monotonic() - started, 6)},
             "report": report.to_dict(), "evidence_bundle": collected.to_dict()}
@@ -185,7 +209,7 @@ def agent_markdown(result):
                f"elapsed: {metrics['elapsed_seconds']} seconds.\n\n")
     if result["planner"] == "ReplayPlanner":
         header += "Synthetic/scripted replay; no model inference or live AWS validation.\n\n"
-    text = header + markdown(report) + "\n## Investigation journal\n\n"
+    text = header + summary_markdown(result["summary"]) + markdown(report) + "\n## Investigation journal\n\n"
     for entry in result["journal"]:
         text += "- " + json.dumps(entry) + "\n"
     text += "\n## Recommended next steps\n\n"

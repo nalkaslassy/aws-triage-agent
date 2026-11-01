@@ -47,7 +47,8 @@ class AWSFollowups:
                 self.changes()
         except Exception as error:
             c.add("followup_failure", function, check,
-                  {"reason": f"Check could not be completed ({c.error_code(error)}); earlier evidence is retained."}, "unavailable")
+                  {"reason": f"Check could not be completed ({c.error_code(error)}); earlier evidence is retained.",
+                   "error_code": c.error_code(error)}, "unavailable")
         return list(c.evidence[before:])
 
     def permissions(self):
