@@ -97,7 +97,7 @@ AWS already offers incident investigation through DevOps Agent and CloudWatch in
 - `tests/`: offline behavioral and collection-boundary tests.
 - `docs/`: architecture, access model, evaluation, and milestones.
 
-Licensed under [Apache License 2.0](LICENSE). Public release remains gated on repository-history/secret review, successful CI, and maintainer approval; adding this license does not itself make the repository public.
+Licensed under [Apache License 2.0](LICENSE). The v0.1.0-alpha release candidate has passed offline CI, package-build/install smoke tests, infrastructure linting, and a repository/history publication-safety audit. Live AWS and Bedrock behavior remain explicitly unvalidated.
 
 ## Development pilot
 
