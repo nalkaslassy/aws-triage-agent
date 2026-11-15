@@ -60,6 +60,13 @@ jobs:
           python -m pip install build twine
           python -m build
           python -m twine check dist/*
+      - name: Smoke-test built wheel in isolated environment
+        run: |
+          python -m venv /tmp/aws-triage-wheel-smoke
+          /tmp/aws-triage-wheel-smoke/bin/python -m pip install dist/*.whl
+          cd /tmp
+          /tmp/aws-triage-wheel-smoke/bin/aws-triage --help
+          /tmp/aws-triage-wheel-smoke/bin/python -c "import aws_triage; print(aws_triage.__file__)"
       - name: Archive distributions
         uses: actions/upload-artifact@v4
         with:
