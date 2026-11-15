@@ -42,4 +42,4 @@ A bounded Bedrock adapter is available with explicit model-data opt-in; live inf
 
 ## Reporting suspected issues
 
-Keep this repository private during development. Report project security issues through a private channel to the owner; do not paste production telemetry into public issues.
+Report suspected vulnerabilities privately to the repository owner before opening a public issue when disclosure could expose credentials, telemetry, or an exploitable weakness. Do not paste production telemetry, credentials, signed requests, or customer data into public issues. Public issues are appropriate for non-sensitive bugs and documentation problems.
