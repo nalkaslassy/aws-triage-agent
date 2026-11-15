@@ -4,6 +4,10 @@ Evidence-based incident triage for AWS applications, permissions, VPN, and netwo
 
 The intended workflow is monitoring alert → scoped evidence collection → investigation → findings and next steps for the responder. Customer reports can provide additional symptoms. A successful investigation can also be an explicit handoff explaining what was checked, what remains unknown, and which team should check it next.
 
+## v0.1.0-alpha — experimental preview
+
+This is an **experimental alpha**, not a production-ready incident response system. Offline examples are synthetic. Live AWS collection, real Bedrock inference, and diagnostic accuracy have not been independently validated. Use only with explicit authorization and a least-privilege role, preferably in a disposable sandbox. No infrastructure remediation is performed by the investigator. See [alpha release notes](docs/ALPHA_RELEASE.md) and [security guidance](docs/SECURITY.md).
+
 ## Current milestone: runnable investigation foundation
 
 This is an early prototype. It includes deterministic first-pass triage and a bounded adaptive runtime with an opt-in Bedrock adapter. Local replay and SDK contracts are tested; live inference and AWS diagnosis quality remain unverified.
@@ -93,7 +97,7 @@ AWS already offers incident investigation through DevOps Agent and CloudWatch in
 - `tests/`: offline behavioral and collection-boundary tests.
 - `docs/`: architecture, access model, evaluation, and milestones.
 
-No open-source license has been selected yet. Keep the repository private while the prototype is being developed.
+Licensed under [Apache License 2.0](LICENSE). Public release remains gated on repository-history/secret review, successful CI, and maintainer approval; adding this license does not itself make the repository public.
 
 ## Development pilot
 
