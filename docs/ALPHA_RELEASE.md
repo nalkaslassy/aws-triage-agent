@@ -1,6 +1,6 @@
 # v0.1.0-alpha — release candidate notes
 
-**Release state:** prepared, not published. No live AWS or Bedrock validation is claimed.
+**Release state:** release candidate, not yet published. Offline engineering and publication-safety checks passed; no live AWS or Bedrock validation is claimed.
 
 ## What this alpha provides
 
@@ -39,10 +39,10 @@ Optional AWS dependencies: `python -m pip install -e '.[aws]'`. The offline exam
 - [x] Apache-2.0 license file and package metadata added.
 - [x] Alpha warning and limitations added to README.
 - [x] Multi-version CI and wheel smoke-test workflows committed.
-- [ ] CI workflow green on release commit.
-- [ ] Clean installation and offline evaluation results independently verified.
-- [ ] Full repository and **git history** inspected for secrets, customer telemetry, private links, and copyrighted material not cleared for redistribution.
-- [ ] Release commit reviewed and approved by owner.
+- [x] Release-candidate CI passed on Python 3.11, 3.12, and 3.13, including offline evaluation, infrastructure lint, build, and isolated wheel smoke test.
+- [x] Clean wheel installation and offline evaluation results verified in GitHub-hosted runners.
+- [x] Current repository and all 19 commits inspected for common secrets, private-key material, personal identifiers, real telemetry, and suspicious credential-like content; only synthetic fixtures were found.
+- [x] Owner approved preparation for public v0.1.0-alpha release.
 - [ ] GitHub repository visibility changed deliberately by owner, if desired.
 - [ ] `v0.1.0-alpha` Git tag and GitHub prerelease created, after blockers clear.
 
