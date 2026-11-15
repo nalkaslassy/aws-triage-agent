@@ -100,6 +100,22 @@ class PilotTests(unittest.TestCase):
             self.assertEqual(result['completed_runs'], 1)
             self.assertNotIn('SECRET_ERROR_BODY', ''.join(p.read_text() for p in Path(out).glob('*.json')))
 
+    def test_failed_checkpoint_blocks_resume_without_additional_model_calls(self):
+        class Broken:
+            def next(self, state):
+                raise RuntimeError('provider unavailable')
+
+        config = {'plan': run_plan(SUITE, 1, 1)}
+        with tempfile.TemporaryDirectory() as out:
+            first = execute_plan(SUITE, out, config, lambda arm: Broken())
+            self.assertEqual(first['completed_runs'], 1)
+            def must_not_call(arm):
+                self.fail('Resume advanced beyond a failed provider checkpoint')
+            resumed = execute_plan(SUITE, out, config, must_not_call)
+            self.assertEqual(resumed['completed_runs'], 1)
+            self.assertEqual(resumed['arms']['basic']['unfinished'] +
+                             resumed['arms']['constrained']['unfinished'], 1)
+
     def test_baselines_are_separately_identified(self):
         result = rules_baselines(self.packets[0][1])
         self.assertIn('initial_only', result)
