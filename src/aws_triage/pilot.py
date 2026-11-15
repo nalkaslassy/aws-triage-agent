@@ -181,6 +181,10 @@ def execute_plan(directory, output, config, factory):
             existing = json.loads(filename.read_text())
             if existing.get('config_sha256') != digest(config):
                 raise ValueError('Checkpoint configuration mismatch')
+            # A provider failure is a terminal checkpoint for this batch. Resuming
+            # must not silently skip it and spend money on later investigations.
+            if existing.get('result', {}).get('stop_reason') == 'planner_unavailable':
+                break
             continue
         result = recorded_run(by_id[identity], factory(arm), arm)
         row = {'case': identity, 'repeat': iteration, 'arm': arm, 'config_sha256': digest(config),
