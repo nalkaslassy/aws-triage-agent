@@ -4,8 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aws-triage-agent"
-version = "0.1.0"
-description = "Evidence-first incident investigation for AWS applications and connectivity"
+version = "0.1.0a0"
+description = "Experimental evidence-first incident investigation for AWS applications and connectivity"
+license = "Apache-2.0"
+classifiers = ["Development Status :: 3 - Alpha", "License :: OSI Approved :: Apache Software License", "Programming Language :: Python :: 3", "Programming Language :: Python :: 3.11", "Programming Language :: Python :: 3.12", "Programming Language :: Python :: 3.13"]
 requires-python = ">=3.11"
 dependencies = []
 
