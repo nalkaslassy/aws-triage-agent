@@ -1,10 +1,10 @@
-# Public beta release gate (v0.1.0-beta)
+# Public alpha release gate (v0.1.0-alpha)
 
 **Status: BLOCKED.** This is a checklist, not a claim that testing or publication has occurred.
 
 ## Product scope
 
-The first beta is a local CLI for bounded, evidence-first investigation of explicitly configured AWS application resources. It can analyze offline synthetic bundles and optionally collect AWS evidence with an existing authorized profile. Bedrock investigation is experimental and opt-in. It never auto-remediates. Datadog, automatic alert triggers, complete network path analysis, and effective IAM authorization analysis are not included.
+The first alpha is a local CLI for bounded, evidence-first investigation of explicitly configured AWS application resources. It can analyze offline synthetic bundles and optionally collect AWS evidence with an existing authorized profile. Bedrock investigation is experimental and opt-in. It never auto-remediates. Datadog, automatic alert triggers, complete network path analysis, and effective IAM authorization analysis are not included.
 
 ## Must pass before making repository public
 
@@ -13,8 +13,8 @@ The first beta is a local CLI for bounded, evidence-first investigation of expli
 - [ ] Review the full source, git history, examples, and generated assets for secrets, personal data, customer telemetry, and unsafe instructions. Remove any exposures and rotate credentials if necessary.
 - [ ] Choose and add an explicit open-source license with the owner's approval; currently none is selected.
 - [ ] Validate installation from a built distribution in a clean environment and run the documented offline examples.
-- [ ] Complete the five controlled AWS scenarios, preserve outcomes and ground truth separately, verify safe cleanup. See docs/LIVE_VALIDATION_GATE.md.
-- [ ] Complete a paid Bedrock smoke test with explicit authorization, inspect outputs and cost. If not completed, label Bedrock unvalidated and exclude it from claims of proven functionality.
+- [ ] For a later validated beta: complete the five controlled AWS scenarios, preserve outcomes and ground truth separately, verify safe cleanup. See docs/LIVE_VALIDATION_GATE.md. This is not an alpha blocker if live functionality is explicitly unvalidated.
+- [ ] For a later validated beta: complete a paid Bedrock smoke test with explicit authorization, inspect outputs and cost. Until then label Bedrock unvalidated and exclude it from claims of proven functionality.
 - [ ] Manually review incident explanations for unsupported causal claims, missing evidence, and inappropriate remediation suggestions.
 - [ ] Confirm no deployment, model inference, or account permission changes happen during installation or offline use.
 - [ ] Ensure docs describe required IAM access, telemetry sensitivity, charges, limitations, and the non-production nature of the beta.
@@ -30,4 +30,4 @@ Do not require Datadog, automatic remediation, multi-account orchestration, or c
 
 ## Go/no-go
 
-**NO-GO** if CI fails, a secret or private telemetry is exposed, a scope escape or mutation is found, live scenario evidence is missing for advertised live functionality, or claims exceed the evaluation. A limited offline-only preview can be considered separately if accurately labeled and approved.
+**NO-GO** if CI fails, a secret or private telemetry is exposed, a scope escape or mutation is found, or claims exceed the evaluation. Live AWS and Bedrock validation may be deferred for an alpha **only if clearly labeled unvalidated**. The alpha must not claim tested live functionality. See [alpha release notes](ALPHA_RELEASE.md).
