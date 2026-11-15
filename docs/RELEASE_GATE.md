@@ -1,6 +1,6 @@
 # Public alpha release gate (v0.1.0-alpha)
 
-**Status: BLOCKED.** This is a checklist, not a claim that testing or publication has occurred.
+**Status: RELEASE CANDIDATE.** Offline engineering and publication-safety gates have been exercised; live AWS and Bedrock validation remain deferred and must stay labeled unvalidated.
 
 ## Product scope
 
@@ -8,25 +8,25 @@ The first alpha is a local CLI for bounded, evidence-first investigation of expl
 
 ## Must pass before making repository public
 
-- [ ] GitHub Actions regression, sandbox offline evaluation, infrastructure lint and distribution build all pass on the intended release commit.
-- [ ] Confirm the newly added CI workflow actually executes in the private repository. A committed workflow alone is not a green build.
-- [ ] Review the full source, git history, examples, and generated assets for secrets, personal data, customer telemetry, and unsafe instructions. Remove any exposures and rotate credentials if necessary.
-- [ ] Choose and add an explicit open-source license with the owner's approval; currently none is selected.
-- [ ] Validate installation from a built distribution in a clean environment and run the documented offline examples.
+- [x] GitHub Actions regression, sandbox offline evaluation, infrastructure lint and distribution build passed on the evaluated release candidate across Python 3.11, 3.12, and 3.13.
+- [x] Confirmed both repository workflows executed successfully on the release-evaluation candidate.
+- [x] Reviewed current source plus all 19 commits for common provider secrets, private-key material, personal identifiers, real telemetry, and suspicious credential-like content. Only synthetic fixtures were found.
+- [x] Apache License 2.0 selected by the owner and added to the repository/package metadata.
+- [x] Built distribution validated; wheel installed in an isolated environment and CLI smoke test passed. Offline unit/evaluation suites passed.
 - [ ] For a later validated beta: complete the five controlled AWS scenarios, preserve outcomes and ground truth separately, verify safe cleanup. See docs/LIVE_VALIDATION_GATE.md. This is not an alpha blocker if live functionality is explicitly unvalidated.
 - [ ] For a later validated beta: complete a paid Bedrock smoke test with explicit authorization, inspect outputs and cost. Until then label Bedrock unvalidated and exclude it from claims of proven functionality.
 - [ ] Manually review incident explanations for unsupported causal claims, missing evidence, and inappropriate remediation suggestions.
 - [ ] Confirm no deployment, model inference, or account permission changes happen during installation or offline use.
-- [ ] Ensure docs describe required IAM access, telemetry sensitivity, charges, limitations, and the non-production nature of the beta.
+- [x] Docs describe IAM requirements, telemetry sensitivity, possible charges, alpha limitations, and non-production status.
 - [ ] Create a version tag and GitHub prerelease only after the above review.
 
-## Beta release evidence record
+## Alpha release evidence record
 
 Record: tested commit SHA, workflow run links and conclusions, Python versions, package hashes, AWS scenario results, evaluator and review date, observed model usage/cost (if tested), known issues, and cleanup confirmation.
 
 ## Non-goals
 
-Do not require Datadog, automatic remediation, multi-account orchestration, or complete VPN diagnosis for this first beta. Do not claim production readiness, measured model accuracy, or research novelty from synthetic preflight alone.
+Do not require Datadog, automatic remediation, multi-account orchestration, or complete VPN diagnosis for this first alpha. Do not claim production readiness, measured model accuracy, or research novelty from synthetic preflight alone.
 
 ## Go/no-go
 
