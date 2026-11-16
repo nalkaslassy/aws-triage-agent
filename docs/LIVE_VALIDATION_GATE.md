@@ -62,3 +62,20 @@ Stop and investigate if any action targets an unexpected AWS account/resource, t
 ## Release decision
 
 Do not claim production-ready, accurate autonomous root-cause analysis, or improved diagnosis until live observations, human-scored pilot outcomes, held-out cases, and a security review support those claims. Datadog, automatic triggers, and full network path diagnosis remain separate roadmap work.
+
+
+## Offline record verification and public summary
+
+After all five scenario records are complete, keep the detailed records and raw evidence local. Use the offline verifier to check required fields, artifact hashes, consistent commit identity, and safety-review outcomes:
+
+```bash
+PYTHONPATH=src python sandbox/validate_live_records.py \
+  --records reports/live-validation/records.json \
+  --out reports/live-validation/public-summary.json
+```
+
+The records file must contain exactly one entry for each of: `normal`, `permission_denied`, `code_exception`, `wrong_table`, and `throttle`. Relative artifact paths are resolved from the records file directory. The verifier recomputes evidence/report SHA-256 values when paths are supplied and refuses mismatches.
+
+The generated summary intentionally excludes account IDs, ARNs, request IDs, artifact paths, raw evidence, report text, and free-form notes. It is designed to be reviewable before any sanitized aggregate is committed publicly. **Do not automatically commit the generated summary**; inspect it first.
+
+A one-record shape example is available at `examples/live_validation_record.example.json`. The example contains placeholder hashes and is not intended to pass verification unchanged.
