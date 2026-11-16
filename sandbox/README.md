@@ -114,6 +114,10 @@ Recovery is always an operator action: redeploy `FaultMode=normal`, wait for com
 
 When finished, run `sam delete --stack-name triage-sandbox-orders --region us-east-1` and review its prompts. The lab table and log group have no retain policy and are deleted with the stack. Confirm deletion and inspect SAM's managed deployment artifact bucket for remaining artifacts; removing the stack does not establish that all account-level SAM artifact storage has disappeared. Do not delete a shared artifact bucket without checking its other uses.
 
+## Verify the five-case evidence package
+
+After completing all scenarios, use [the live validation gate](../docs/LIVE_VALIDATION_GATE.md) and the offline `sandbox/validate_live_records.py` verifier to confirm all five records use the same tested commit, artifact hashes match, and no mutation/scope-escape/missing-as-healthy review failure is present. The generated public summary deliberately omits raw identifiers and evidence. Review it manually before publishing anything.
+
 ## What remains before claiming milestone 0.2 complete
 
 Deploy and exercise the real AWS cases, verify logged request IDs and HTTP outcomes, gather incident windows, record delayed/partial telemetry, and compare findings against ground truth. Scoped IAM policy inspection, deployment history correlation, trace retrieval, and live performance measurements are still pending.
