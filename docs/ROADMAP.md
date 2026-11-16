@@ -1,12 +1,12 @@
 # Milestones
 
-## 0.1 — Investigation foundation (implemented locally)
+## 0.1 — Investigation foundation (public alpha)
 
-Offline evidence analysis, initial AWS collectors, reproducible examples, bounded access, explicit gaps, and behavioral tests. Live AWS verification remains pending.
+Offline evidence analysis, initial AWS collectors, reproducible examples, bounded access, explicit gaps, behavioral tests, packaging, CI, and public release hygiene are implemented. Live AWS verification remains pending.
 
 ## 0.2 — First complete application investigation
 
-Status: deployment preparation implemented; live AWS validation pending. The Orders API template, structured error logs, five local scenarios, configuration/concurrency checks, sandbox manifest creation, and one-request IAM-signed operator probe are available. See [the lab guide](../sandbox/README.md). These are local contracts, not measured real-incident diagnosis results.
+**Current priority.** Status: deployment preparation implemented; live AWS validation pending. The Orders API template, structured error logs, five local scenarios, configuration/concurrency checks, sandbox manifest creation, and one-request IAM-signed operator probe are available. See [the lab guide](../sandbox/README.md). These are local contracts, not measured real-incident diagnosis results.
 
 The next increment adds typed evidence validation, partial-result retention, failure-context log classification, REST API incident/baseline metrics, evidence-index reports, and limited same-function table-target correlation. See [behavior and limits](INVESTIGATION.md). Broader trace/change/IAM/network investigation is still pending.
 
@@ -46,6 +46,6 @@ Acceptance: compare against deterministic triage and existing investigation opti
 
 Ticket/channel integration, application onboarding, multi-account support, and additional stacks after the initial workflow works. Human-reviewed recommendations remain the default; production auto-remediation is not part of these milestones.
 
-## Latest quality improvements (implemented locally)
+## Latest quality improvements
 
 Authorization candidates now require an incident-time failed request/action/target, with matching simulation references. Check journals expose collection outcomes and bounded transient retries. Focused handoffs group request and root trace identifiers. Five independent model input packets and separate rubrics are available with no-inference preflight. All remain local/recorded validation; live AWS testing, actual model comparison, full trace retrieval, Datadog, and deeper connectivity investigation remain pending.
