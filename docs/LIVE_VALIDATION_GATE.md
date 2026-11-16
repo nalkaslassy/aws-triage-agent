@@ -78,4 +78,4 @@ The records file must contain exactly one entry for each of: `normal`, `permissi
 
 The generated summary intentionally excludes account IDs, ARNs, request IDs, artifact paths, raw evidence, report text, and free-form notes. It is designed to be reviewable before any sanitized aggregate is committed publicly. **Do not automatically commit the generated summary**; inspect it first.
 
-A one-record shape example is available at `examples/live_validation_record.example.json`. The example contains placeholder hashes and is not intended to pass verification unchanged.
+A one-record shape example is available at `docs/live_validation_record.example.json`. The example contains placeholder hashes and is not intended to pass verification unchanged.
