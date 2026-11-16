@@ -4,7 +4,7 @@ Evidence-based incident triage for AWS applications, permissions, VPN, and netwo
 
 The intended workflow is monitoring alert → scoped evidence collection → investigation → findings and next steps for the responder. Customer reports can provide additional symptoms. A successful investigation can also be an explicit handoff explaining what was checked, what remains unknown, and which team should check it next.
 
-## v0.1.0-alpha — experimental preview
+## v0.1.0-alpha — public experimental preview
 
 This is an **experimental alpha**, not a production-ready incident response system. Offline examples are synthetic. Live AWS collection, real Bedrock inference, and diagnostic accuracy have not been independently validated. Use only with explicit authorization and a least-privilege role, preferably in a disposable sandbox. No infrastructure remediation is performed by the investigator. See [alpha release notes](docs/ALPHA_RELEASE.md) and [security guidance](docs/SECURITY.md).
 
@@ -97,7 +97,7 @@ AWS already offers incident investigation through DevOps Agent and CloudWatch in
 - `tests/`: offline behavioral and collection-boundary tests.
 - `docs/`: architecture, access model, evaluation, and milestones.
 
-Licensed under [Apache License 2.0](LICENSE). The v0.1.0-alpha release candidate has passed offline CI, package-build/install smoke tests, infrastructure linting, and a repository/history publication-safety audit. Live AWS and Bedrock behavior remain explicitly unvalidated.
+Licensed under [Apache License 2.0](LICENSE). The public v0.1.0-alpha has passed offline CI, package-build/install smoke tests, infrastructure linting, and a repository/history publication-safety audit. Live AWS and Bedrock behavior remain explicitly unvalidated. See [CONTRIBUTING.md](CONTRIBUTING.md) and [CHANGELOG.md](CHANGELOG.md).
 
 ## Development pilot
 
