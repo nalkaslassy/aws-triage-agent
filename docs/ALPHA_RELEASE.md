@@ -1,6 +1,6 @@
 # v0.1.0-alpha — release candidate notes
 
-**Release state:** release candidate, not yet published. Offline engineering and publication-safety checks passed; no live AWS or Bedrock validation is claimed.
+**Release state:** repository is public as an experimental alpha. Offline engineering and publication-safety checks passed; no live AWS or Bedrock validation is claimed.
 
 ## What this alpha provides
 
@@ -43,7 +43,7 @@ Optional AWS dependencies: `python -m pip install -e '.[aws]'`. The offline exam
 - [x] Clean wheel installation and offline evaluation results verified in GitHub-hosted runners.
 - [x] Current repository and all 19 commits inspected for common secrets, private-key material, personal identifiers, real telemetry, and suspicious credential-like content; only synthetic fixtures were found.
 - [x] Owner approved preparation for public v0.1.0-alpha release.
-- [ ] GitHub repository visibility changed deliberately by owner, if desired.
+- [x] GitHub repository visibility changed deliberately by owner.
 - [ ] `v0.1.0-alpha` Git tag and GitHub prerelease created, after blockers clear.
 
 ## Security and reporting
