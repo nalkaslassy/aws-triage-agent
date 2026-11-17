@@ -116,7 +116,7 @@ When finished, run `sam delete --stack-name triage-sandbox-orders --region us-ea
 
 ## Verify the five-case evidence package
 
-After completing all scenarios, use [the live validation gate](../docs/LIVE_VALIDATION_GATE.md) and the offline `sandbox/validate_live_records.py` verifier to confirm all five records use the same tested commit, artifact hashes match, and no mutation/scope-escape/missing-as-healthy review failure is present. The generated public summary deliberately omits raw identifiers and evidence. Review it manually before publishing anything.
+Use `sandbox/live_validation_workflow.py init` before the first scenario, `hash` after the five evidence/report artifacts exist, and `finalize` after human review. See [the live validation gate](../docs/LIVE_VALIDATION_GATE.md). Finalization confirms all five records use the same tested commit, artifact hashes match, and no mutation/scope-escape/missing-as-healthy review failure is present. The generated public summary deliberately omits raw identifiers and evidence. Review it manually before publishing anything.
 
 ## What remains before claiming milestone 0.2 complete
 
