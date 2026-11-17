@@ -2,9 +2,12 @@ import importlib.util
 import json
 import tempfile
 import unittest
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT / "sandbox") not in sys.path:
+    sys.path.insert(0, str(ROOT / "sandbox"))
 SPEC = importlib.util.spec_from_file_location(
     "live_validation_workflow",
     ROOT / "sandbox" / "live_validation_workflow.py",
