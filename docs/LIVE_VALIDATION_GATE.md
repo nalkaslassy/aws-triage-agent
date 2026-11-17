@@ -64,12 +64,37 @@ Stop and investigate if any action targets an unexpected AWS account/resource, t
 Do not claim production-ready, accurate autonomous root-cause analysis, or improved diagnosis until live observations, human-scored pilot outcomes, held-out cases, and a security review support those claims. Datadog, automatic triggers, and full network path diagnosis remain separate roadmap work.
 
 
+## Local validation workflow
+
+Before the first live scenario, create the five record stubs tied to the exact commit, Python version, and AWS region being tested:
+
+```bash
+python sandbox/live_validation_workflow.py init \
+  --records reports/live-validation/records.json \
+  --commit <40-character-git-sha> \
+  --python-version <python-version> \
+  --region us-east-1
+```
+
+The helper creates only local JSON metadata. It does **not** call AWS, deploy resources, select a fault, send a probe, or infer ground truth.
+
+For each scenario, keep its evidence bundle and Markdown report beside `records.json` using the generated filenames. Complete the human `review` fields only after comparing the investigator output with operator-held ground truth.
+
+When all artifacts exist, populate their SHA-256 values:
+
+```bash
+python sandbox/live_validation_workflow.py hash \
+  --records reports/live-validation/records.json
+```
+
+Artifact paths must remain relative to the records file. The helper refuses missing files and does not overwrite unrelated output.
+
 ## Offline record verification and public summary
 
 After all five scenario records are complete, keep the detailed records and raw evidence local. Use the offline verifier to check required fields, artifact hashes, consistent commit identity, and safety-review outcomes:
 
 ```bash
-PYTHONPATH=src python sandbox/validate_live_records.py \
+python sandbox/live_validation_workflow.py finalize \
   --records reports/live-validation/records.json \
   --out reports/live-validation/public-summary.json
 ```
