@@ -44,6 +44,8 @@ class LiveValidationWorkflowTests(unittest.TestCase):
             self.assertNotIn("expected_http", text)
             self.assertNotIn("fault_mode", text)
             self.assertNotIn("account_id", text)
+            self.assertTrue(all(r["schema_version"] == 1 for r in records))
+            self.assertEqual(path.stat().st_mode & 0o777, 0o600)
 
     def test_init_refuses_overwrite(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -88,6 +90,25 @@ class LiveValidationWorkflowTests(unittest.TestCase):
             self.assertNotIn("evidence_path", text)
             self.assertNotIn("report_path", text)
             self.assertNotIn("notes", text)
+
+    def test_hash_rejects_symlink_artifact(self):
+        if not hasattr(Path, "symlink_to"):
+            self.skipTest("symlinks unavailable")
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            path = root / "records.json"
+            records = WORK.init_records(path, "a" * 40, "3.12.8", "us-east-1")
+            self.make_artifacts(folder, records)
+            target = root / "real-evidence.json"
+            target.write_text("{}", encoding="utf-8")
+            link = root / records[0]["evidence_path"]
+            link.unlink()
+            try:
+                link.symlink_to(target.name)
+            except OSError:
+                self.skipTest("symlinks unavailable")
+            with self.assertRaisesRegex(ValueError, "symbolic link"):
+                WORK.populate_hashes(path)
 
     def test_finalize_refuses_incomplete_human_review(self):
         with tempfile.TemporaryDirectory() as folder:
