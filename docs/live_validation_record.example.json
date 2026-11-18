@@ -1,5 +1,6 @@
 [
   {
+    "schema_version": 1,
     "scenario": "normal",
     "commit_sha": "0000000000000000000000000000000000000000",
     "python_version": "3.12.8",
