@@ -1,4 +1,4 @@
-# v0.1.0-alpha — release candidate notes
+# v0.1.0-alpha — public alpha notes
 
 **Release state:** repository is public as an experimental alpha. Offline engineering and publication-safety checks passed; no live AWS or Bedrock validation is claimed.
 
@@ -34,17 +34,17 @@ python -m unittest discover -s tests -v
 
 Optional AWS dependencies: `python -m pip install -e '.[aws]'`. The offline example requires no AWS account or model inference. Windows PowerShell activation: `.venv\Scripts\Activate.ps1`.
 
-## Release candidate verification
+## Alpha release verification
 
 - [x] Apache-2.0 license file and package metadata added.
 - [x] Alpha warning and limitations added to README.
 - [x] Multi-version CI and wheel smoke-test workflows committed.
 - [x] Release-candidate CI passed on Python 3.11, 3.12, and 3.13, including offline evaluation, infrastructure lint, build, and isolated wheel smoke test.
 - [x] Clean wheel installation and offline evaluation results verified in GitHub-hosted runners.
-- [x] Current repository and all 19 commits inspected for common secrets, private-key material, personal identifiers, real telemetry, and suspicious credential-like content; only synthetic fixtures were found.
+- [x] Repository source and reachable history were inspected for common secrets, private-key material, personal identifiers, real telemetry, and suspicious credential-like content; only synthetic fixtures were found.
 - [x] Owner approved preparation for public v0.1.0-alpha release.
 - [x] GitHub repository visibility changed deliberately by owner.
-- [ ] `v0.1.0-alpha` Git tag and GitHub prerelease created, after blockers clear.
+- [ ] Confirm the `v0.1.0-alpha` Git tag/GitHub prerelease state in GitHub if a formal release artifact is desired; repository publication itself is complete.
 
 ## Security and reporting
 
@@ -52,4 +52,4 @@ See [SECURITY.md](SECURITY.md) for access limits, data handling, and how to repo
 
 ## Release policy
 
-Do not label this as production-ready, claim AWS/Bedrock validation, or publish a model-accuracy percentage from synthetic preflight. Defer the live evaluation to a subsequent milestone.
+Do not label this as production-ready, claim AWS/Bedrock validation, or publish a model-accuracy percentage from synthetic preflight. Live evaluation is the active v0.2.0 milestone. See [LIVE_VALIDATION_GATE.md](LIVE_VALIDATION_GATE.md) and [V0.2_RELEASE_CRITERIA.md](V0.2_RELEASE_CRITERIA.md).
