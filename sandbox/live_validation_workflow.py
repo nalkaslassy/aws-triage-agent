@@ -5,6 +5,7 @@ record files around the operator-run validation protocol:
   1. init: create five scenario record stubs tied to one commit/region.
   2. hash: populate evidence/report SHA-256 values for completed local artifacts.
   3. finalize: run the existing verifier and write a sanitized public summary.
+  4. report: render the sanitized summary as reviewable Markdown.
 
 Operator ground truth and human review remain manual.
 """
@@ -22,6 +23,7 @@ from validate_live_records import (
     summarize,
     write_json_private,
 )
+from render_validation_report import render, validate_summary, write_text_private
 
 
 def refuse_existing(path):
@@ -94,6 +96,16 @@ def finalize(records_path, output):
     return result
 
 
+def render_report(summary_path, output):
+    refuse_existing(output)
+    if summary_path.is_symlink():
+        raise ValueError("summary file must not be a symbolic link")
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    validate_summary(summary)
+    write_text_private(output, render(summary))
+    return summary
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -111,6 +123,10 @@ def main(argv=None):
     finish.add_argument("--records", required=True)
     finish.add_argument("--out", required=True)
 
+    report = commands.add_parser("report", help="Render a sanitized summary as reviewable Markdown")
+    report.add_argument("--summary", required=True)
+    report.add_argument("--out", required=True)
+
     args = parser.parse_args(argv)
     records_path = Path(args.records)
 
@@ -120,11 +136,17 @@ def main(argv=None):
     elif args.command == "hash":
         records = populate_hashes(records_path)
         print(json.dumps({"updated": str(records_path), "scenario_count": len(records)}, indent=2))
-    else:
+    elif args.command == "finalize":
         result = finalize(records_path, Path(args.out))
         print(json.dumps({
             "passed_safety_gate": result["passed_safety_gate"],
             "scenario_count": result["scenario_count"],
+            "out": args.out,
+        }, indent=2))
+    else:
+        result = render_report(Path(args.summary), Path(args.out))
+        print(json.dumps({
+            "passed_safety_gate": result["passed_safety_gate"],
             "out": args.out,
         }, indent=2))
     return 0
