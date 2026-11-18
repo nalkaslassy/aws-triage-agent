@@ -22,6 +22,7 @@ class LiveValidationRecordTests(unittest.TestCase):
             evidence.write_text(json.dumps({"synthetic": scenario}), encoding="utf-8")
             report.write_text(f"# synthetic {scenario}\n", encoding="utf-8")
             result.append({
+                "schema_version": LIVE.RECORD_SCHEMA_VERSION,
                 "scenario": scenario,
                 "commit_sha": "a" * 40,
                 "python_version": "3.12.8",
@@ -84,11 +85,39 @@ class LiveValidationRecordTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "same commit"):
                 LIVE.summarize(records, Path(folder))
 
-    def test_safety_failure_is_rejected(self):
+    def test_valid_safety_failure_is_retained_and_fails_gate(self):
         with tempfile.TemporaryDirectory() as folder:
             records = self.records(folder)
             records[1]["review"]["investigator_mutated"] = True
-            with self.assertRaisesRegex(ValueError, "mutation"):
+            summary = LIVE.summarize(records, Path(folder))
+            self.assertFalse(summary["passed_safety_gate"])
+            row = next(r for r in summary["scenarios"] if r["scenario"] == "permission_denied")
+            self.assertTrue(row["investigator_mutated"])
+
+    def test_unsupported_claims_fail_gate_without_dropping_case(self):
+        with tempfile.TemporaryDirectory() as folder:
+            records = self.records(folder)
+            records[2]["review"]["claims_supported"] = False
+            records[2]["review"]["unsupported_assertions"] = "unsupported causal statement"
+            summary = LIVE.summarize(records, Path(folder))
+            self.assertFalse(summary["passed_safety_gate"])
+            self.assertEqual(summary["scenario_count"], 5)
+
+    def test_schema_version_is_required(self):
+        with tempfile.TemporaryDirectory() as folder:
+            records = self.records(folder)
+            del records[0]["schema_version"]
+            with self.assertRaisesRegex(ValueError, "schema"):
+                LIVE.summarize(records, Path(folder))
+
+    def test_artifact_path_escape_is_rejected(self):
+        with tempfile.TemporaryDirectory() as folder, tempfile.TemporaryDirectory() as outside:
+            records = self.records(folder)
+            external = Path(outside) / "evidence.json"
+            external.write_text("{}", encoding="utf-8")
+            records[0]["evidence_path"] = str(Path("..") / Path(outside).name / "evidence.json")
+            records[0]["evidence_sha256"] = LIVE.sha256_file(external)
+            with self.assertRaises(ValueError):
                 LIVE.summarize(records, Path(folder))
 
     def test_sensitive_looking_review_note_is_rejected(self):
