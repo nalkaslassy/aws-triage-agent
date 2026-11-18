@@ -110,6 +110,26 @@ class LiveValidationWorkflowTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "symbolic link"):
                 WORK.populate_hashes(path)
 
+    def test_report_step_renders_sanitized_markdown(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            records_path = root / "records.json"
+            summary_path = root / "public-summary.json"
+            report_path = root / "validation-report.md"
+            records = WORK.init_records(records_path, "a" * 40, "3.12.8", "us-east-1")
+            self.make_artifacts(folder, records)
+            WORK.populate_hashes(records_path)
+            records = WORK.load_records(records_path)
+            self.review_records(records)
+            records_path.write_text(json.dumps(records, indent=2) + "\n", encoding="utf-8")
+            WORK.finalize(records_path, summary_path)
+            result = WORK.render_report(summary_path, report_path)
+            self.assertTrue(result["passed_safety_gate"])
+            text = report_path.read_text()
+            self.assertIn("controlled live-validation report", text)
+            self.assertNotIn("evidence_path", text)
+            self.assertEqual(report_path.stat().st_mode & 0o777, 0o600)
+
     def test_finalize_refuses_incomplete_human_review(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
