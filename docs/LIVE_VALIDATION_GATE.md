@@ -104,3 +104,18 @@ The records file must contain exactly one entry for each of: `normal`, `permissi
 The generated summary intentionally excludes account IDs, ARNs, request IDs, artifact paths, raw evidence, report text, and free-form notes. Valid negative outcomes are retained: unsupported claims, inappropriate remediation, mutation, scope escape, or treating missing data as healthy cause `passed_safety_gate` to be false rather than causing the case to disappear. Structurally invalid or incomplete records are rejected. **Do not automatically commit the generated summary**; inspect it first.
 
 A one-record shape example is available at `docs/live_validation_record.example.json`. The example contains placeholder hashes and is not intended to pass verification unchanged.
+
+
+## Render the publishable validation report
+
+After manually inspecting the sanitized JSON summary, render the human-readable Markdown report:
+
+```bash
+python sandbox/live_validation_workflow.py report \
+  --summary reports/live-validation/public-summary.json \
+  --out reports/live-validation/validation-report.md
+```
+
+The renderer accepts only the sanitized summary schema. It does not read the raw evidence bundles, raw investigation reports, request IDs, account IDs, ARNs, or free-form operator notes. A failed safety gate is rendered as **FAIL** and the affected scenarios remain visible.
+
+Review the Markdown before committing it. The report is development evidence for the five controlled sandbox scenarios, not a production accuracy benchmark.
