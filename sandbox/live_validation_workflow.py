@@ -14,7 +14,14 @@ import json
 import sys
 from pathlib import Path
 
-from validate_live_records import SCENARIOS, sha256_file, summarize
+from validate_live_records import (
+    RECORD_SCHEMA_VERSION,
+    SCENARIOS,
+    artifact_path,
+    sha256_file,
+    summarize,
+    write_json_private,
+)
 
 
 def refuse_existing(path):
@@ -24,6 +31,7 @@ def refuse_existing(path):
 
 def new_record(scenario, commit_sha, python_version, region):
     return {
+        "schema_version": RECORD_SCHEMA_VERSION,
         "scenario": scenario,
         "commit_sha": commit_sha,
         "python_version": python_version,
@@ -53,13 +61,14 @@ def new_record(scenario, commit_sha, python_version, region):
 
 def init_records(output, commit_sha, python_version, region):
     refuse_existing(output)
-    output.parent.mkdir(parents=True, exist_ok=True)
     records = [new_record(s, commit_sha, python_version, region) for s in SCENARIOS]
-    output.write_text(json.dumps(records, indent=2) + "\n", encoding="utf-8")
+    write_json_private(output, records)
     return records
 
 
 def load_records(path):
+    if path.is_symlink():
+        raise ValueError("records file must not be a symbolic link")
     value = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(value, list):
         raise ValueError("records file must contain a JSON array")
@@ -71,17 +80,9 @@ def populate_hashes(path):
     base = path.parent
     for record in records:
         for path_key, hash_key in (("evidence_path", "evidence_sha256"), ("report_path", "report_sha256")):
-            raw = record.get(path_key)
-            if not isinstance(raw, str) or not raw:
-                raise ValueError(f"{record.get('scenario', 'record')}: missing {path_key}")
-            artifact = Path(raw)
-            if artifact.is_absolute():
-                raise ValueError(f"{record.get('scenario', 'record')}: artifact paths must be relative to records file")
-            artifact = base / artifact
-            if not artifact.is_file():
-                raise FileNotFoundError(f"Missing artifact: {artifact}")
+            artifact = artifact_path(base, record.get(path_key), path_key)
             record[hash_key] = sha256_file(artifact)
-    path.write_text(json.dumps(records, indent=2) + "\n", encoding="utf-8")
+    write_json_private(path, records, overwrite=True)
     return records
 
 
@@ -89,8 +90,7 @@ def finalize(records_path, output):
     refuse_existing(output)
     records = load_records(records_path)
     result = summarize(records, records_path.parent)
-    output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    write_json_private(output, result)
     return result
 
 
