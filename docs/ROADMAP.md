@@ -16,7 +16,7 @@ The next increment adds typed evidence validation, partial-result retention, fai
 - Correlate a failure to its request, principal, action, target, and time.
 - Verify the collector against the real sandbox; preserve a sanitized evidence bundle.
 
-Acceptance: evidence supports the explanation; no failing permission check becomes a healthy result; no broad permission grant is recommended as a default fix.
+Acceptance: evidence supports the explanation; no failing permission check becomes a healthy result; no broad permission grant is recommended as a default fix. The exact release gate is defined in [v0.2.0 release criteria](V0.2_RELEASE_CRITERIA.md), including a sanitized JSON summary and human-readable validation report.
 
 ## 0.3 — Connectivity investigation
 
