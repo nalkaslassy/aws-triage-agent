@@ -2,6 +2,26 @@
 
 All notable public changes to AWS Triage Agent are documented here.
 
+## Unreleased
+
+### Added
+
+- Hardened live-validation record workflow with schema validation, artifact hashing, path confinement, symlink rejection, and owner-only atomic writes.
+- Sanitized aggregate JSON generation that retains valid negative outcomes instead of hiding failed cases.
+- Human-readable sanitized Markdown validation report rendering.
+- Explicit v0.2.0 release criteria for controlled live AWS sandbox validation.
+- Contributor guidance, issue/PR templates, and public security reporting guidance.
+
+### Changed
+
+- README and roadmap now identify controlled live AWS sandbox validation as the active milestone.
+- Public documentation distinguishes alpha publication evidence from the current v0.2 validation gate.
+
+### Validation
+
+- Full CI continues to pass across Python 3.11, 3.12, and 3.13, including AWS contract tests, infrastructure lint, package build/install checks, offline sandbox evaluation, agent evaluation, and pilot preflight.
+
+
 ## [0.1.0-alpha] - 2026-11-16
 
 Initial public alpha.
