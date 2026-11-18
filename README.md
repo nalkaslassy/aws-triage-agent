@@ -8,9 +8,9 @@ The intended workflow is monitoring alert → scoped evidence collection → inv
 
 This is an **experimental alpha**, not a production-ready incident response system. Offline examples are synthetic. Live AWS collection, real Bedrock inference, and diagnostic accuracy have not been independently validated. Use only with explicit authorization and a least-privilege role, preferably in a disposable sandbox. No infrastructure remediation is performed by the investigator. See [alpha release notes](docs/ALPHA_RELEASE.md) and [security guidance](docs/SECURITY.md).
 
-## Current milestone: runnable investigation foundation
+## Current milestone: v0.2 live sandbox validation
 
-This is an early prototype. It includes deterministic first-pass triage and a bounded adaptive runtime with an opt-in Bedrock adapter. Local replay and SDK contracts are tested; live inference and AWS diagnosis quality remain unverified.
+This public alpha includes deterministic first-pass triage and a bounded adaptive runtime with an opt-in Bedrock adapter. Local replay, SDK contracts, packaging, and validation tooling are tested. The active milestone is controlled live AWS sandbox validation; live inference and real AWS diagnosis quality remain unverified.
 
 Implemented:
 
@@ -105,4 +105,4 @@ The [12-case pilot package](pilot/README.md) includes paired basic/constrained m
 
 ## Next step: live sandbox validation
 
-The sandbox deployment code and local scenario checks are available. No AWS resources have been deployed and live diagnosis remains unverified. Start with [the sandbox guide](sandbox/README.md): validate/build the template, review the deployment in your sandbox account, send a normal request, and collect its evidence before injecting a fault.
+The sandbox deployment code, five local scenarios, hardened evidence-record workflow, sanitized JSON summary, and Markdown validation-report renderer are available. No live AWS validation result is claimed yet. Start with [the sandbox guide](sandbox/README.md), follow [the live validation gate](docs/LIVE_VALIDATION_GATE.md), and use [the v0.2.0 release criteria](docs/V0.2_RELEASE_CRITERIA.md) as the graduation checklist.
