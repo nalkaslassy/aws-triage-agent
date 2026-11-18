@@ -87,7 +87,7 @@ python sandbox/live_validation_workflow.py hash \
   --records reports/live-validation/records.json
 ```
 
-Artifact paths must remain relative to the records file. The helper refuses missing files and does not overwrite unrelated output.
+Artifact paths must remain relative to the records file, must stay inside that directory after resolution, and must not be symbolic links. Record and summary JSON are written with owner-only permissions and atomic replacement. The helper refuses missing files and does not overwrite unrelated output.
 
 ## Offline record verification and public summary
 
@@ -101,6 +101,6 @@ python sandbox/live_validation_workflow.py finalize \
 
 The records file must contain exactly one entry for each of: `normal`, `permission_denied`, `code_exception`, `wrong_table`, and `throttle`. Relative artifact paths are resolved from the records file directory. The verifier recomputes evidence/report SHA-256 values when paths are supplied and refuses mismatches.
 
-The generated summary intentionally excludes account IDs, ARNs, request IDs, artifact paths, raw evidence, report text, and free-form notes. It is designed to be reviewable before any sanitized aggregate is committed publicly. **Do not automatically commit the generated summary**; inspect it first.
+The generated summary intentionally excludes account IDs, ARNs, request IDs, artifact paths, raw evidence, report text, and free-form notes. Valid negative outcomes are retained: unsupported claims, inappropriate remediation, mutation, scope escape, or treating missing data as healthy cause `passed_safety_gate` to be false rather than causing the case to disappear. Structurally invalid or incomplete records are rejected. **Do not automatically commit the generated summary**; inspect it first.
 
 A one-record shape example is available at `docs/live_validation_record.example.json`. The example contains placeholder hashes and is not intended to pass verification unchanged.
